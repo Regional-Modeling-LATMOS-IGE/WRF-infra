@@ -1,0 +1,275 @@
+ &time_control
+ start_year                          = __STARTYEAR__, __STARTYEAR__, __STARTYEAR__,
+ start_month                         = __STARTMONTH__,   __STARTMONTH__,   __STARTMONTH__,
+ start_day                           = __STARTDAY__,   __STARTDAY__,   __STARTDAY__,
+ start_hour                          = __STARTHOUR__,   __STARTHOUR__,   __STARTHOUR__,
+ start_minute                        = 00,   00,   00,
+ start_second                        = 00,   00,   00,
+ end_year                            = __ENDYEAR__, __ENDYEAR__, __ENDYEAR__,
+ end_month                           = __ENDMONTH__,   __ENDMONTH__,   __ENDMONTH__,
+ end_day                             = __ENDDAY__,   __ENDDAY__,   __ENDDAY__,
+ end_hour                            = __ENDHOUR__,   __ENDHOUR__,   __ENDHOUR__,
+ end_minute                          = 00,   00,   00,
+ end_second                          = 00,   00,   00,
+ interval_seconds                    = 21600
+ input_from_file                     = .true.,.true.,.true.,
+ history_interval_m                  = 180,  60,   60,
+ frames_per_outfile                  = 1,  1,   1,
+ restart                             = .false.,
+ restart_interval_h                  = 24,
+ io_form_history                     = 2
+ io_form_restart                     = 2
+ io_form_input                       = 2
+ io_form_boundary                    = 2
+ auxinput4_inname                    = 'wrflowinp_d<domain>'
+ auxinput4_interval_m                = 360, 360, 360,
+ io_form_auxinput4                   = 2
+! WRF-Chem
+ auxinput5_inname                    = 'wrfchemi_d<domain>_<date>'
+ auxinput5_interval_h                = 24, 24, 24, 24,
+ frames_per_auxinput5                = 1, 1, 1, 1,
+ io_form_auxinput5                   = 2
+ auxinput6_inname                    = 'wrfbiochemi_d<domain>'
+ io_form_auxinput6                   = 2
+ auxinput7_inname                    = 'wrffirechemi_d<domain>_<date>'
+ auxinput7_interval_m                = 60, 60, 60, 60,
+ frames_per_auxinput7                = 1, 1, 1, 1, 
+ io_form_auxinput7                   = 2
+ debug_level                         = 0
+ /
+
+ &domains
+! This is not used if use_adaptive_time_step = .true.
+ time_step                           = 180
+ time_step_fract_num                 = 0,
+ time_step_fract_den                 = 1,
+! The following lines should match namelist.wps
+ max_dom                             = 1,
+ e_we                                = 50,    111,   100,
+ e_sn                                = 51,    111,   100,
+ e_vert                              = 50,     72,    72,
+ p_top_requested                     = 5000,
+ ! 38 for ERAI, 27 for FNL
+ num_metgrid_levels                  = 27,
+ num_metgrid_soil_levels             = 4,
+ dx                                  = 100000, 20000,  1000,
+ dy                                  = 100000, 20000,  1000,
+ grid_id                             = 1,     2,     3,
+ parent_id                           = 0,     1,     2,
+ i_parent_start                      = 1,     37,    36,
+ j_parent_start                      = 1,     37,    38,
+ parent_grid_ratio                   = 1,     5,     3,
+ parent_time_step_ratio              = 1,     5,     3,
+ feedback                            = 0,
+ smooth_option                       = 0
+! Adaptive time step
+! Useful for tests and simple evaluations, but not recommended
+! when running precise sensitivity tests because this introduces
+! additional variability in the model runs
+ use_adaptive_time_step              = .false.,
+ step_to_output_time                 = .true.,
+ target_cfl                          = 0.8,1.0,1.0,
+ target_hcfl                         = 0.8,1.0,1.0,
+ max_step_increase_pct               = 5,51,51,
+! starting time step (s) needs to be = 4x the resolution (km)
+ starting_time_step                  = 180,60,12,
+! max time step (s) needs to be = 6-8x the resolution (km)
+ max_time_step                       = 500,90,18,
+! min time step (s) needs to be = the resolution (km)
+ min_time_step                       = 100,15,3,
+ adaptation_domain                   = 1,
+ /
+
+ &physics
+! Microphysics options
+ mp_physics                          = 28,    10,    10,
+ mp_zero_out                         = 2
+ mp_zero_out_thresh                  = 1.e-8
+ progn                               = 0, 0,
+ aci_wrf_opt                         = 0
+! Radiation options
+! 4 for RRTMG
+ ra_lw_physics                       = 4,     4,     4,
+ ra_sw_physics                       = 4,     4,     4,
+ radt                                = 30,    30,    30,
+ icloud                              = 4
+! aer_opt                             = 1
+! Boundary layer options
+! 5 for MYNN2 (sfclay 5, 2 or 1), 1 for YSU (sfclay 1), 2 for MYJ (sfclay 2) 
+ bl_pbl_physics                      = 5, 5, 5,
+ bldt                                = 0,     0,     0,
+! Surface layer options
+ sf_sfclay_physics                   = 5, 5, 5,
+! Land surface options
+! 2 for Noah-LSM, 4 for NoahMP, 5 for CLM4
+ sf_surface_physics                  = 2, 2, 2,
+ surface_input_source                = 1,
+ ! 10 for CLM, 4 for other surface models
+ num_soil_layers                     = 4,
+ num_land_cat                        = 21,
+ sf_urban_physics                    = 0,   0,   0,
+ sst_update                          = 1
+ sst_skin                            = 1
+ tmn_update                          = 1
+ lagday                              = 150
+ usemonalb                           = .true.
+ rdmaxalb                            = .true.
+ rdlai2d                             = .false.
+ fractional_seaice                   = 1
+! Following options should be used for polar runs - but requires additional data
+! seaice_albedo_opt                   = 2
+! seaice_albedo_default               = 0.825
+ seaice_snowdepth_opt                = 0
+ seaice_snowdepth_max                = 1.0
+ seaice_snowdepth_min                = 0.001
+! seaice_thickness_opt                = 1
+! seaice_thickness_default            = 3.0
+! Cumulus options
+! Disable below 10km resolutions
+ cu_physics                          = 5,     5,     5,
+ cudt                                = 0,     0,     0,
+ cu_rad_feedback                     = .true., .true., .true.,
+ cu_diag                             = 1,
+! shallowcu_forced_ra                 = .true., .true., .true.,
+! Lightning
+! lightning_option                    = 11,
+! lightning_dt                        = 0.,
+! iccg_method                         = 3, 3, 3,
+ /
+
+ &dynamics
+ diff_opt                            = 1,
+ km_opt                              = 4,
+ diff_6th_opt                        = 0,      0,      0,
+ diff_6th_factor                     = 0.12,   0.12,   0.12,
+ base_temp                           = 290.
+ damp_opt                            = 3,
+ zdamp                               = 5000.,  5000.,  5000.,
+ dampcoef                            = 0.2,    0.2,    0.2
+ khdif                               = 0,      0,      0,
+ kvdif                               = 0,      0,      0,
+ w_damping                           = 1,
+ non_hydrostatic                     = .true., .true., .true.,
+ moist_adv_opt                       = 2,      2,      2,
+ scalar_adv_opt                      = 2,      2,      2,
+ tke_adv_opt                         = 2,      2,      2,
+ chem_adv_opt                        = 2,      2,      2,
+ ! tracer_opt                          = 3,
+ ! tracer_adv_opt                      = 1,
+ hybrid_opt                          = 0,
+ use_theta_m                         = 0,
+ /
+
+ &bdy_control
+ spec_bdy_width                      = 5,
+ spec_zone                           = 1,
+ relax_zone                          = 4,
+ specified                           = .true., .false.,.false.,
+ spec_exp                            = 0.33,
+ nested                              = .false., .true., .true.,
+ /
+
+ &fdda
+! This namelist handles nudging. Do not use in high resolution domains.
+! 2 is spectral nudging, 1 grid nudging, 0 for off
+ grid_fdda                           = 2, 0, 0,
+ gfdda_inname                        = "wrffdda_d<domain>"
+ gfdda_interval_m                    = 360,   360,   360,
+ gfdda_end_h                         = 10000, 10000,    24,
+ io_form_gfdda                       = 2
+ fgdt                                = 0,     0,     0,
+ if_no_pbl_nudging_uv                = 0,     0,     1,
+ if_no_pbl_nudging_t                 = 0,     0,     1,
+ if_no_pbl_nudging_q                 = 0,     0,     1,
+ if_no_pbl_nudging_ph                = 0,     0,     1,
+ if_zfac_uv                          = 1,     0,     1,
+ dk_zfac_uv                          = 10,   10,     1,
+ if_zfac_t                           = 1,     0,     1,
+ dk_zfac_t                           = 10,   10,     1,
+ if_zfac_q                           = 1,     0,     1,
+ dk_zfac_q                           = 10,   10,     1,
+ if_zfac_ph                          = 1,     0,     1,
+ dk_zfac_ph                          = 10,   10,     1,
+ guv                                 = 0.0003,  0.0003,     0.0003,
+ gt                                  = 0.0003,  0.0003,     0.0003,
+ gq                                  = 0.0000,  0.0000,    0.00001,
+ gph                                 = 0.0003,  0.0003,     0.0003,
+ grid_sfdda                          = 0,     0,     0,
+ fgdtzero                            = 0,     0,     0,
+ if_ramping                          = 0
+ dtramp_min                          = 60.0
+ !WARNING this should be changed if the driving model (FNL, ERA5) is changed,
+ ! or if the domain size is changed (e_sn, e_we, dx, or dy).
+ xwavenum                            = __XWAVENUM__,
+ ywavenum                            = __YWAVENUM__,
+ /
+
+ &grib2
+ /
+
+ &chem
+! Chemistry options
+ chem_opt                            = 202, 202, 202,
+ chemdt                              = 0, 0, 0,
+ phot_opt                            = 4, 4, 4,
+ has_o3_exo_coldens                  = .true.
+ photdt                              = 10, 10, 10,
+ gas_drydep_opt                      = 1, 1, 1,
+ aer_drydep_opt                      = 1, 1, 1,
+ gaschem_onoff                       = 1, 1, 1,
+ aerchem_onoff                       = 1, 1, 1,
+ wetscav_onoff                       = 1, 1, 1,
+ cldchem_onoff                       = 1, 1, 1,
+ vertmix_onoff                       = 1, 1, 1,
+ chem_conv_tr                        = 1, 1, 1,
+! kfcup_diag                          = 1,     1,     1,
+ conv_tr_wetscav                     = 1,     1,     1,
+ conv_tr_aqchem                      = 1,     1,     1,
+ aer_op_opt                          = 1, 1, 1,
+ opt_pars_out                        = 1
+ aer_ra_feedback                     = 1, 1, 1,
+ chemdiag                            = 0, 0, 0,
+ diagnostic_chem                     = 0, 0, 0,
+ n2o5_hetchem                        = 1
+ aci_wrfchem_opt                     = 1
+ mosaic_aer_settling_opt             = 1, 1, 1,
+! aero_cw_diag_opt                    = 1, 1, 1,
+! Emission options
+! emiss_inpt_opt and emiss_opt are constrained by chem_opt
+ kemit                               = 1
+ emiss_opt                           = 10, 10, 10,
+ emiss_inpt_opt                      = 102, 102, 102,
+ io_style_emissions                  = 2
+ biomass_burn_opt                    = 2,          2,  2,
+ plumerisefire_frq                   = 30,         30,  30,
+ bio_emiss_opt                       = __BIO_EMISS_OPT__, __BIO_EMISS_OPT__, __BIO_EMISS_OPT__,
+ ne_area                             = 432
+ bioemdt                             = 0, 0, 0,
+ dust_opt                            = 13
+ seas_opt                            = 6
+ seas_oa_opt                         = 1
+ seas_so4_opt                        = 1
+ dms_opt                             = 1
+! blowing_snow_opt                     = .true.
+! lnox_opt                            = 1, 1, 1,
+! iccg_method                         = 3, 3, 3,
+! N_IC                                = 250, 250, 250,
+! N_CG                                = 250, 250, 250,
+! aircraft_emiss_opt                    = 0, 0,
+! Boundary and initial conditions options
+ chem_in_opt                         = 0,          0, 0,
+ gas_bc_opt                          = 1,          0, 0,
+ gas_ic_opt                          = 1,          1, 1,
+ aer_bc_opt                          = 1,          0, 0,
+ aer_ic_opt                          = 1,          1, 1,
+ have_bcs_chem                       = .true., .false., .false.,
+ have_bcs_tracer                     = .false., .false., .false.
+ have_bcs_upper                      = .true., .true., .true.,
+ fixed_ubc_inname                    = "ubvals_b40.20th.track1_1996-2005.nc",
+ trop_lev_inname                     = "clim_p_trop.nc",
+ /
+
+ &namelist_quilt
+ nio_tasks_per_group                 = 0,
+ nio_groups                          = 1,
+ /
