@@ -402,8 +402,7 @@ if __name__ == "__main__":
     parser.add_argument("--domain", default=1, type=int)
     parser.add_argument("--dir-wrf-in", default="./")
     parser.add_argument("--dir-em-in",
-                        default=("/bettik/PROJECTS/pr-regionalchem/laperer"
-                                 "/WRFCHEM_INPUT/CAMS_EMISSIONS/v5.3"))
+                        default=("/data/marelle/marelle/EMISSIONS/CAMS/v5.3/"))
     args = parser.parse_args()
     start = datetime.strptime(args.start, "%Y-%m-%d")
     end = datetime.strptime(args.end, "%Y-%m-%d")
