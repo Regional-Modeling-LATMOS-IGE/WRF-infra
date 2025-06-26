@@ -1,1 +1,37 @@
 In this folder we store the scripts and instructions for downloading input data for WRF-Chem runs such as meteorology, emissions...
+
+*Meteorology*
+
+**ERA5**
+- run the 2 python scripts "get_ERA5_surface.py" and "get_ERA5_levels.py"
+- variables at the beginning of the scripts are used to define the time period and spatial extent of the data you download
+- these scripts require to have the cdsapi library installed and credentials (see [https://cds.climate.copernicus.eu/how-to-api](https://cds.climate.copernicus.eu/how-to-api))
+  
+**GFS-FNL**
+- run the python script "get_FNL.py"
+- select the time period by setting the *dl_period* variable
+
+Aerosol boundary conditions
+* [ ] CAM-CHEM
+
+
+*Fire emissions*
+
+**FINN**  
+- run the python script "get_FINN.py"
+- set up *year* and *days* (*days* is in day of year format)
+- after the download run the "convert_FINN.py" script to append the individual files and get them in the expected format
+  
+* [ ] CAMS-GFAS (in the future)
+
+
+*Seawater chlorophyll-a*
+
+**Copernicus Marine Data Store**
+- run the python script "get_chlorophyll_cmems.py"
+- for this you need the copernicusmarine library [https://pypi.org/project/copernicusmarine/](https://pypi.org/project/copernicusmarine/) and a CMEMS account by registering there:
+[https://data.marine.copernicus.eu/register?redirect=%2Fproducts](https://data.marine.copernicus.eu/register?redirect=%2Fproducts)
+
+DMS
+* [ ] LANA climatology
+* [ ] CSIB 
