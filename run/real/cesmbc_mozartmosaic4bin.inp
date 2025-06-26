@@ -1,0 +1,63 @@
+&control
+
+do_bc     = .true.
+do_ic     = .true.
+domain    = 1
+dir_wrf   = './'
+dir_moz = '/data/marelle/marelle/WRF/wrfchem-input-data/initial_boundary_conditions/mozbc/camchem/'
+fn_moz  = 'cesm-201202.nc'
+moz_var_suffix = ''
+
+spc_map = 'o3 -> O3', 'n2o -> N2O', 'no -> NO',
+          'no2 -> NO2', 'no3 -> NO3', 'nh3 -> NH3', 'hno3 -> HNO3', 'hno4 -> HO2NO2',
+          'n2o5 -> N2O5', 'ho -> OH', 'ho2 -> HO2', 'h2o2 -> H2O2',
+          'ch4 -> CH4', 'co -> CO', 'ch3ooh -> CH3OOH',
+          'hcho -> CH2O', 'ch3oh -> CH3OH', 'c2h4 -> C2H4',
+          'ald -> CH3CHO', 'ch3cooh -> CH3COOH', 'acet -> CH3COCH3', 'mgly -> CH3COCHO',
+          'pan -> PAN', 'mpan -> MPAN', 'macr -> MACR',
+          'mvk -> MVK', 'c2h6 -> C2H6', 'c3h6 -> C3H6', 'c3h8 -> C3H8',
+          'c2h5oh -> C2H5OH',
+          'onitr -> ONITR', 'isopr -> ISOP',
+          'acetol -> HYAC',
+          'mek -> MEK',
+          'bigene -> BIGENE', 'bigalk -> BIGALK',
+          'tol -> TOLUENE', 'benzene -> BENZENE', 'xyl -> XYLENES',
+          'cres -> CRESOL', 'dms -> DMS', 'so2 -> SO2',
+          'sulf -> 0.0*so4_a1',
+          'oc_a01 -> 0.9886*soa_a2+0.1216*soa_a1+0.1123*pom_a1;1.0e9',
+          'oc_a02 -> 0.0114*soa_a2+0.7618*soa_a1+0.3783*pom_a1;1.0e9',
+          'oc_a03 -> 0.0000*soa_a2+0.1164*soa_a1+0.0087*pom_a1;1.0e9',
+          'oc_a04 -> 0.0000*soa_a2+0.0002*soa_a1+0.0000*pom_a1;1.0e9'
+          'bc_a01 -> 0.1216*bc_a4+0.1123*bc_a1;1.0e9',
+          'bc_a02 -> 0.7618*bc_a4+0.3783*bc_a1;1.0e9',
+          'bc_a03 -> 0.1164*bc_a4+0.0087*bc_a1;1.0e9',
+          'bc_a04 -> 0.0002*bc_a4+0.0000*bc_a1;1.0e9',
+          'so4_a01 -> 0.1216*so4_a1+0.0000*so4_a3+0.2376*so4_a2;1.0e9',
+          'so4_a02 -> 0.7618*so4_a1+0.0002*so4_a3+0.0001*so4_a2;1.0e9',
+          'so4_a03 -> 0.1164*so4_a1+0.0995*so4_a3+0.0000*so4_a2;1.0e9',
+          'so4_a04 -> 0.0002*so4_a1+0.9003*so4_a3+0.0000*so4_a2;1.0e9',
+          'nh4_a01 -> 0.0050*so4_a1+0.0000*so4_a3+0.0446*so4_a2;1.0e9',
+          'nh4_a02 -> 0.0930*so4_a1+0.0000*so4_a3+0.0000*so4_a2;1.0e9',
+          'nh4_a03 -> 0.0203*so4_a1+0.0186*so4_a3+0.0000*so4_a2;1.0e9',
+          'nh4_a04 -> 0.0000*so4_a1+0.1690*so4_a3+0.0000*so4_a2;1.0e9',
+          'no3_a01 -> 0.0000*so4_a1+0.0000*so4_a3+0.0000*so4_a2;1.0e9',
+          'no3_a02 -> 0.0000*so4_a1+0.0000*so4_a3+0.0000*so4_a2;1.0e9',
+          'no3_a03 -> 0.0000*so4_a1+0.0000*so4_a3+0.0000*so4_a2;1.0e9',
+          'no3_a04 -> 0.0000*so4_a1+0.0000*so4_a3+0.0000*so4_a2;1.0e9',
+          'na_a01 -> 0.0479*ncl_a1+0.0000*ncl_a3+0.0935*ncl_a2;1.0e9',
+          'na_a02 -> 0.2997*ncl_a1+0.0000*ncl_a3+0.0000*ncl_a2;1.0e9',
+          'na_a03 -> 0.0458*ncl_a1+0.0391*ncl_a3+0.0000*ncl_a2;1.0e9',
+          'na_a04 -> 0.0000*ncl_a1+0.3542*ncl_a3+0.0000*ncl_a2;1.0e9',
+          'cl_a01 -> 0.0737*ncl_a1+0.0000*ncl_a3+0.1441*ncl_a2;1.0e9',
+          'cl_a02 -> 0.4621*ncl_a1+0.0000*ncl_a3+0.0000*ncl_a2;1.0e9',
+          'cl_a03 -> 0.0709*ncl_a1+0.0604*ncl_a3+0.0000*ncl_a2;1.0e9',
+          'cl_a04 -> 0.0001*ncl_a1+0.5462*ncl_a3+0.0000*ncl_a2;1.0e9',
+          'oin_a01 -> 0.1216*dst_a1+0.0000*dst_a3+0.2376*dst_a2;1.0e9',
+          'oin_a02 -> 0.7618*dst_a1+0.0002*dst_a3+0.0001*dst_a2;1.0e9',
+          'oin_a03 -> 0.1164*dst_a1+0.0995*dst_a3+0.0000*dst_a2;1.0e9',
+          'oin_a04 -> 0.0002*dst_a1+0.9003*dst_a3+0.0000*dst_a2;1.0e9',
+          'num_a01->0.7135*num_a1+0.0000*num_a3+0.0494*num_a2;1.0',
+          'num_a02->0.2847*num_a1+0.0239*num_a3+0.0000*num_a2;1.0',
+          'num_a03->0.0016*num_a1+0.6258*num_a3+0.0000*num_a2;1.0',
+          'num_a04->0.0000*num_a1+0.3501*num_a3+0.0000*num_a2;1.0'
+/
