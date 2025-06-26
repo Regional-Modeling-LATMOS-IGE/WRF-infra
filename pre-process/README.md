@@ -11,8 +11,12 @@ In this folder we store the scripts and instructions for downloading input data 
 - run the python script "get_FNL.py"
 - select the time period by setting the *dl_period* variable
 
-Aerosol boundary conditions
-* [ ] CAM-CHEM
+*Aerosol boundary conditions*
+
+**CAM-CHEM**
+- There are no download scripts for CAM-CHEM boundary conditions
+- If the simulation period is 2022 or before get the data from there: [https://www.acom.ucar.edu/cesm/subset.shtml](https://www.acom.ucar.edu/cesm/subset.shtml)
+- For more recent simulations go to: [https://www.acom.ucar.edu/waccm/download.shtml](https://www.acom.ucar.edu/waccm/download.shtml)
 
 
 *Fire emissions*
