@@ -10,32 +10,7 @@
 #SBATCH --time=01:00:00
 
 
-#-------- Input --------
-CASENAME='WRF_CHEM_TEST'
-CASENAME_COMMENT='MOZARTMOSAIC'
-
-# Root directory with the compiled WRF executables (main/wrf.exe and main/real.exe)
-WRFDIR=~/WRF/src/WRF-Chem-Polar/WRFV4
-WRFVERSION='chem.develop'
-
-# Simulation start year and month
-yys=2012
-mms=02
-dds=15
-hhs=00
-# Simulation end year, month, day, hour
-yye=2012
-mme=02
-dde=16
-hhe=00
-
-NAMELIST="namelist.input.YYYY"
-
-
 #-------- Parameters --------
-# Root directory for WRF input/output
-OUTDIR_ROOT="/data/marelle/marelle/WRF/WRF_OUTPUT"
-SCRATCH_ROOT="/scratchu/$(whoami)"
 # WRF-Chem input data directory
 WRFCHEM_INPUT_DATA_DIR="/data/marelle/marelle/WRF/wrfchem-input-data"
 
@@ -111,10 +86,10 @@ cp "${WPSDIR}/met_em.d"* "$SCRATCH/" || exit
 #---- Init spectral nudging parameters
 # We only nudge over the scale $nudging_scale in meters
 nudging_scale=1000000
-wrf_dx=$(sed -n -e 's/^[ ]*dx[ ]*=[ ]*//p' "$SLURM_SUBMIT_DIR/${NAMELIST}" | sed -n -e 's/,.*//p')
-wrf_dy=$(sed -n -e 's/^[ ]*dy[ ]*=[ ]*//p' "$SLURM_SUBMIT_DIR/${NAMELIST}" | sed -n -e 's/,.*//p')
-wrf_e_we=$(sed -n -e 's/^[ ]*e_we[ ]*=[ ]*//p' "$SLURM_SUBMIT_DIR/${NAMELIST}" | sed -n -e 's/,.*//p')
-wrf_e_sn=$(sed -n -e 's/^[ ]*e_sn[ ]*=[ ]*//p' "$SLURM_SUBMIT_DIR/${NAMELIST}" | sed -n -e 's/,.*//p')
+wrf_dx=$(sed -n -e 's/^[ ]*dx[ ]*=[ ]*//p' "$SLURM_SUBMIT_DIR/${NAMELIST_REAL}" | sed -n -e 's/,.*//p')
+wrf_dy=$(sed -n -e 's/^[ ]*dy[ ]*=[ ]*//p' "$SLURM_SUBMIT_DIR/${NAMELIST_REAL}" | sed -n -e 's/,.*//p')
+wrf_e_we=$(sed -n -e 's/^[ ]*e_we[ ]*=[ ]*//p' "$SLURM_SUBMIT_DIR/${NAMELIST_REAL}" | sed -n -e 's/,.*//p')
+wrf_e_sn=$(sed -n -e 's/^[ ]*e_sn[ ]*=[ ]*//p' "$SLURM_SUBMIT_DIR/${NAMELIST_REAL}" | sed -n -e 's/,.*//p')
 xwavenum=$(( (wrf_dx * wrf_e_we) / nudging_scale))
 ywavenum=$(( (wrf_dy * wrf_e_sn) / nudging_scale))
 
@@ -123,7 +98,7 @@ echo " "
 echo "-------- $SLURM_JOB_NAME: run real.exe without bio emissions--------"
 echo " "
 # Prepare the real.exe namelist, set up run start and end dates
-cp "$SLURM_SUBMIT_DIR/${NAMELIST}" namelist.input || exit
+cp "$SLURM_SUBMIT_DIR/${NAMELIST_REAL}" namelist.input || exit
 sed -i "s/__STARTYEAR__/${yys}/g" namelist.input
 sed -i "s/__STARTMONTH__/${mms}/g" namelist.input
 sed -i "s/__STARTDAY__/${dds}/g" namelist.input
@@ -162,7 +137,7 @@ echo " "
 echo "-------- $SLURM_JOB_NAME: run real.exe with bio emissions --------"
 echo " "
 # Prepare the real.exe namelist, set up run start and end dates
-cp "$SLURM_SUBMIT_DIR/${NAMELIST}" namelist.input
+cp "$SLURM_SUBMIT_DIR/${NAMELIST_REAL}" namelist.input
 sed -i "s/__STARTYEAR__/${yys}/g" namelist.input
 sed -i "s/__STARTMONTH__/${mms}/g" namelist.input
 sed -i "s/__STARTDAY__/${dds}/g" namelist.input

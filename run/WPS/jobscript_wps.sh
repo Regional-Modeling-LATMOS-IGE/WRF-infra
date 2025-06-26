@@ -13,36 +13,12 @@
 #SBATCH --time=01:00:00
 
 
-#-------- Input --------
-CASENAME='WRF_CHEM_TEST'
-
-# Directory containing the WPS executables and inputs
-WPS_SRC_DIR=~/WRF/src/WPS/
-
-# Simulation start year and month
-yys=2012
-mms=02
-dds=15
-hhs=00
-# Simulation end year, month, day, hour
-yye=2012
-mme=02
-dde=16
-hhe=00
-
-NAMELIST="namelist.wps.YYYY"
-
 # Select the input data. 
 # 0=ERA5 reanalysis, 1=ERA-INTERIM reanalysis 2=NCEP/FNL reanalysis
 INPUT_DATA_SELECT=2
 
 
 #-------- Parameters --------
-# Root directory for WPS input/output
-# Change this to your own /data or /proju directory
-OUTDIR_ROOT="/data/marelle/marelle/WRF/WRF_OUTPUT"
-SCRATCH_ROOT="/scratchu/$(whoami)"
-
 # Directory containing the GRIB file inputs for ungrib
 if ((INPUT_DATA_SELECT==0 || INPUT_DATA_SELECT==1)); then
   GRIB_DIR="/data/marelle/marelle/met_data/"
@@ -126,7 +102,7 @@ cp "$SLURM_SUBMIT_DIR/"* "$SCRATCH/"
 cp "$0" "$OUTDIR/jobscript_wps.sh"
 
 #  Prepare the WPS namelist
-cp $NAMELIST namelist.wps
+cp $NAMELIST_WPS namelist.wps
 sed -i "4s/YYYY/${yys}/g" namelist.wps
 sed -i "4s/MM/${mms}/g" namelist.wps
 sed -i "4s/DD/${dds}/g" namelist.wps
@@ -228,7 +204,7 @@ while (( $(date -d "$date_s_met +1 day" "+%s") <= $(date -d "$date_e" "+%s") ));
   mme_met=${date_e_met:4:2}
   dde_met=${date_e_met:6:2}
   # Prepare the namelist
-  cp -f $NAMELIST namelist.wps
+  cp -f $NAMELIST_WPS namelist.wps
   sed -i "4s/YYYY/${yys_met}/g" namelist.wps
   sed -i "4s/MM/${mms_met}/g" namelist.wps
   sed -i "4s/DD/${dds_met}/g" namelist.wps
