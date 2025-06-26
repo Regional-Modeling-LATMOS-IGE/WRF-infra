@@ -26,8 +26,6 @@ In this folder we store the scripts and instructions for downloading input data 
 - set up *year* and *days* (*days* is in day of year format)
 - after the download run the "convert_FINN.py" script to append the individual files and get them in the expected format
   
-* [ ] CAMS-GFAS (in the future)
-
 
 *Seawater chlorophyll-a*
 
