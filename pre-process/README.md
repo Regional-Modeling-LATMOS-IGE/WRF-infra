@@ -32,6 +32,12 @@ Aerosol boundary conditions
 - for this you need the copernicusmarine library [https://pypi.org/project/copernicusmarine/](https://pypi.org/project/copernicusmarine/) and a CMEMS account by registering there:
 [https://data.marine.copernicus.eu/register?redirect=%2Fproducts](https://data.marine.copernicus.eu/register?redirect=%2Fproducts)
 
-DMS
-* [ ] LANA climatology
-* [ ] CSIB 
+*Oceanic DMS*
+
+**LANA climatology**
+
+The data can be downloaded from [https://www.bodc.ac.uk/solas_integration/implementation_products/group1/dms/](https://www.bodc.ac.uk/solas_integration/implementation_products/group1/dms/)
+
+**CSIB** 
+
+The data can be downloaded from [https://zenodo.org/records/15299391](https://zenodo.org/records/15299391)
