@@ -11,32 +11,8 @@
 #SBATCH --time=03:00:00
 
 
-#-------- Input --------
-CASENAME='WRF_CHEM_TEST_MOZARTMOSAIC'
-CASENAME_COMMENT=''
-
-# Root directory with the compiled WRF executables (main/wrf.exe and main/real.exe)
-WRFDIR=~/WRF/src/WRF-Chem-Polar/WRFV4
-WRFVERSION='chem.develop'
-
-# Simulation start year and month
-yys=2012
-mms=02
-dds=15
-hhs=00
-# Simulation end year, month, day, hour
-yye=2012
-mme=02
-dde=16
-hhe=00
-
-NAMELIST="namelist.input.YYYY"
-
-
 #-------- Parameters --------
 # Root directory for WRF input/output
-OUTDIR_ROOT="/data/marelle/marelle/WRF/WRF_OUTPUT"
-SCRATCH_ROOT="/scratchu/$(whoami)"
 INDIR_ROOT="$OUTDIR_ROOT"
 # WRF-Chem input data directory
 WRFCHEM_INPUT_DATA_DIR="/data/marelle/marelle/WRFChem/wrf_utils/wrfchem_input"
@@ -98,7 +74,7 @@ cp "$WRFDIR/run/"* "$SCRATCH/"
 cp "$WRFDIR/../executables/wrf.exe.$WRFVERSION" "$SCRATCH/wrf.exe"
 
 #  Copy and prepare the WRF namelist, set up run start and end dates
-cp "$SLURM_SUBMIT_DIR/${NAMELIST}" namelist.input
+cp "$SLURM_SUBMIT_DIR/${NAMELIST_REAL}" namelist.input
 # Init spectral nudging parameters
 # We only nudge over the scale $nudging_scale in meters
 nudging_scale=1000000
