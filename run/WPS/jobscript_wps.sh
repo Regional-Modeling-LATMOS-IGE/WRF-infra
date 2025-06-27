@@ -36,6 +36,10 @@ NAMELIST="namelist.wps.YYYY"
 # 0=ERA5 reanalysis, 1=ERA-INTERIM reanalysis 2=NCEP/FNL reanalysis
 INPUT_DATA_SELECT=2
 
+# Specifiy whether to write chl-a and DMS in met_em files
+# set to 1 to call add_chloroa_wps.py and add_dmsocean_wps.py
+# NB requires additional data to use
+USE_CHLA_DMS_WPS=1
 
 #-------- Parameters --------
 # Root directory for WPS input/output
@@ -247,14 +251,15 @@ done # While date < end date
 rm -f avg_tsfc.exe metgrid.exe FILE* PFILE* TAVGSFC
 rm -rf metgrid
 
-#---- Add chlorophyll-a oceanic concentrations to met_em*
-echo "python -u add_chloroa_wps.py $SCRATCH/ ${date_s} ${date_e}" 
-python -u add_chloroa_wps.py "$SCRATCH/" "${date_s}" "${date_e}"
+if ((USE_CHLA_DMS_WPS==1)); then
+  #---- Add chlorophyll-a oceanic concentrations to met_em*
+  echo "python -u add_chloroa_wps.py $SCRATCH/ ${date_s} ${date_e}" 
+  python -u add_chloroa_wps.py "$SCRATCH/" "${date_s}" "${date_e}"
 
-#---- Add DMS oceanic concentrations to met_em*
-echo "python -u add_dmsocean_wps.py $SCRATCH/ ${date_s} ${date_e}" 
-python -u add_dmsocean_wps.py "$SCRATCH/" "${date_s}" "${date_e}"
-
+  #---- Add DMS oceanic concentrations to met_em*
+  echo "python -u add_dmsocean_wps.py $SCRATCH/ ${date_s} ${date_e}" 
+  python -u add_dmsocean_wps.py "$SCRATCH/" "${date_s}" "${date_e}"
+fi
 
 #-------- Clean up --------
 mv ./geo_em*nc ./met_em* "$OUTDIR/"
