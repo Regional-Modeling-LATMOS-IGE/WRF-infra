@@ -37,9 +37,9 @@ NAMELIST="namelist.wps.YYYY"
 INPUT_DATA_SELECT=2
 
 # Specifiy whether to write chl-a and DMS in met_em files
-# set to 1 to call add_chloroa_wps.py and add_dmsocean_wps.py
+# set to true to call add_chloroa_wps.py and add_dmsocean_wps.py
 # NB requires additional data to use
-USE_CHLA_DMS_WPS=1
+USE_CHLA_DMS_WPS=true
 
 #-------- Parameters --------
 # Root directory for WPS input/output
@@ -251,7 +251,7 @@ done # While date < end date
 rm -f avg_tsfc.exe metgrid.exe FILE* PFILE* TAVGSFC
 rm -rf metgrid
 
-if ((USE_CHLA_DMS_WPS==1)); then
+if $USE_CHLA_DMS_WPS; then
   #---- Add chlorophyll-a oceanic concentrations to met_em*
   echo "python -u add_chloroa_wps.py $SCRATCH/ ${date_s} ${date_e}" 
   python -u add_chloroa_wps.py "$SCRATCH/" "${date_s}" "${date_e}"
