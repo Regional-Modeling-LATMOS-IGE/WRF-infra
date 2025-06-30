@@ -1,6 +1,6 @@
 In this folder we store the scripts and instructions for downloading input data for WRF-Chem runs such as meteorology, emissions...
 
-*Meteorology*
+<ins>*Meteorology*</ins>
 
 **ERA5**
 - run the 2 python scripts "get_ERA5_surface.py" and "get_ERA5_levels.py"
@@ -11,7 +11,7 @@ In this folder we store the scripts and instructions for downloading input data 
 - run the python script "get_FNL.py"
 - select the time period by setting the *dl_period* variable
 
-*Aerosol boundary conditions*
+<ins>*Aerosol boundary conditions*</ins>
 
 **CAM-CHEM**
 - There are no download scripts for CAM-CHEM boundary conditions
@@ -19,7 +19,7 @@ In this folder we store the scripts and instructions for downloading input data 
 - For more recent simulations go to: [https://www.acom.ucar.edu/waccm/download.shtml](https://www.acom.ucar.edu/waccm/download.shtml)
 
 
-*Fire emissions*
+<ins>*Fire emissions*</ins>
 
 **FINN**  
 - run the python script "get_FINN.py"
@@ -27,19 +27,15 @@ In this folder we store the scripts and instructions for downloading input data 
 - after the download run the "convert_FINN.py" script to append the individual files and get them in the expected format
   
 
-*Seawater chlorophyll-a*
+<ins>*Seawater chlorophyll-a*</ins>
 
 **Copernicus Marine Data Store**
 - run the python script "get_chlorophyll_cmems.py"
 - for this you need the copernicusmarine library [https://pypi.org/project/copernicusmarine/](https://pypi.org/project/copernicusmarine/) and a CMEMS account by registering there:
 [https://data.marine.copernicus.eu/register?redirect=%2Fproducts](https://data.marine.copernicus.eu/register?redirect=%2Fproducts)
 
-*Oceanic DMS*
+<ins>*Oceanic DMS*</ins>
 
-**LANA climatology**
+**LANA climatology** - The data can be downloaded from [https://www.bodc.ac.uk/solas_integration/implementation_products/group1/dms/](https://www.bodc.ac.uk/solas_integration/implementation_products/group1/dms/)
 
-The data can be downloaded from [https://www.bodc.ac.uk/solas_integration/implementation_products/group1/dms/](https://www.bodc.ac.uk/solas_integration/implementation_products/group1/dms/)
-
-**CSIB** 
-
-The data can be downloaded from [https://zenodo.org/records/15299391](https://zenodo.org/records/15299391)
+**CSIB** - The data can be downloaded from [https://zenodo.org/records/15299391](https://zenodo.org/records/15299391)
