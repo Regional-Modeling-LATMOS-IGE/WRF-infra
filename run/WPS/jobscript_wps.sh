@@ -17,7 +17,7 @@
 CASENAME='WRF_CHEM_TEST'
 
 # Directory containing the WPS executables and inputs
-WPS_SRC_DIR=~/WRF/src/WPS/
+WPS_SRC_DIR=/home/marelle/WRF/src/WPS/
 
 # Simulation start year and month
 yys=2012
@@ -40,7 +40,7 @@ INPUT_DATA_SELECT=2
 #-------- Parameters --------
 # Root directory for WPS input/output
 # Change this to your own /data or /proju directory
-OUTDIR_ROOT="/data/marelle/marelle/WRF/WRF_OUTPUT"
+OUTDIR_ROOT="/data/rprice/WRFChem"
 SCRATCH_ROOT="/scratchu/$(whoami)"
 
 # Directory containing the GRIB file inputs for ungrib
