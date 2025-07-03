@@ -4,6 +4,6 @@ domains = 1,
 start_lai_mnth = SMONTH,
 end_lai_mnth = EMONTH,
 wrf_dir = 'WRFRUNDIR',
-megan_dir = '/data/marelle/marelle/WRF/wrfchem-input-data/bio_emissions/megan_bio_emiss'
+megan_dir = 'MEGANEMIS_DIR'
 
 /

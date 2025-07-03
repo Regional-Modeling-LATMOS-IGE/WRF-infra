@@ -4,8 +4,8 @@ do_bc     = .true.
 do_ic     = .true.
 domain    = 1
 dir_wrf   = './'
-dir_moz = '/data/marelle/marelle/WRF/wrfchem-input-data/initial_boundary_conditions/mozbc/camchem/'
-fn_moz  = 'cesm-201202.nc'
+dir_moz = 'MOZBC_DIR'
+fn_moz  = 'MOZBC_FILE'
 moz_var_suffix = ''
 
 spc_map = 'o3 -> O3', 'n2o -> N2O', 'no -> NO',

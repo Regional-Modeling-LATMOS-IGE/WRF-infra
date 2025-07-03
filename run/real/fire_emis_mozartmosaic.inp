@@ -1,7 +1,7 @@
 &control
 domains           = 1,
-fire_directory    = '/data/marelle/marelle/WRF/wrfchem-input-data/fire_emissions/',
-fire_filename(1)  = 'GLOBAL_FINNv15_2012_MOZ4_7112014.txt',
+fire_directory    = 'FIREEMIS_DIR',
+fire_filename(1)  = 'FIREEMIS_FILE',
 wrf_directory     = 'WRFRUNDIR',
 start_date        = 'SYEAR-SMONTH-SDAY',
 end_date          = 'EYEAR-EMONTH-EDAY',
