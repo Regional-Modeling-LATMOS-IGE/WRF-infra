@@ -143,7 +143,7 @@ sed -i "5s/HH/${hhe}/g" namelist.wps
 
 #-------- Run geogrid --------
 mkdir geogrid
-cp "$SLURM_SUBMIT_DIR/GEOGRID.TBL" geogrid/GEOGRID.TBL
+cp "$WPS_SRC_DIR/geogrid/GEOGRID.TBL" geogrid/GEOGRID.TBL
 echo "-------- Running geogrid.exe --------"
 cp "$WPS_SRC_DIR/geogrid.exe" .
 mpirun ./geogrid.exe
@@ -193,11 +193,7 @@ elif (( INPUT_DATA_SELECT==1 )); then
   ./link_grib.csh grib_links/ei
   ./ungrib.exe
 elif (( INPUT_DATA_SELECT==2 )); then
-  # Ungrib for FNL
-  # The FNL data format changed recently, but the format available on SPIRIT is
-  # the old one. Need to use the old Vtable.
-  # cp "$WPS_SRC_DIR/ungrib/Variable_Tables/Vtable.GFS" Vtable
-  cp "$SLURM_SUBMIT_DIR/Vtable.GFS" Vtable
+  cp "$WPS_SRC_DIR/ungrib/Variable_Tables/Vtable.GFS" Vtable
   sed -i 's/_FILE_ungrib_/FILE/g' namelist.wps
   ./link_grib.csh grib_links/fnl
   ./ungrib.exe
@@ -215,7 +211,7 @@ cp "$WPS_SRC_DIR/util/avg_tsfc.exe" .
 cp "$WPS_SRC_DIR/metgrid.exe" .
 
 mkdir metgrid
-ln -sf "$SLURM_SUBMIT_DIR/METGRID.TBL" metgrid/METGRID.TBL
+ln -sf "$WPS_SRC_DIR/metgrid/METGRID.TBL" metgrid/METGRID.TBL
 
 # In order to use the daily averaged skin temperature for lakes, tavgsfc (thus also metgrid) 
 # should be run once per day
