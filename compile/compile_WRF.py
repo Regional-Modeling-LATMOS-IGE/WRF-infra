@@ -69,23 +69,23 @@ def get_options():
 
     """
     parser = get_argparser()
-    args = parser.parse_args()
-    if args.optfile is not None:
-        with open(args.optfile) as f:
-            args_from_file = json.load(f)
-        if not isinstance(args_from_file, dict):
+    opts = parser.parse_args()
+    if opts.optfile is not None:
+        with open(opts.optfile) as f:
+            opts_from_file = json.load(f)
+        if not isinstance(opts_from_file, dict):
             raise ValueError("Option file must represent a JSON dictionnary.")
-        for optname in args_from_file:
-            if optname not in args:
+        for optname in opts_from_file:
+            if optname not in opts:
                 raise ValueError("Unknown option in file: %s." % optname)
-        parser.set_defaults(**args_from_file)
-        args = parser.parse_args()
-    if args.repository.startswith("http://"):
+        parser.set_defaults(**opts_from_file)
+        opts = parser.parse_args()
+    if opts.repository.startswith("http://"):
         raise ValueError("We do not allow http connections (not secure).")
-    if repo_is_local(args.repository):
-        args.repository = process_path(args.repository)
-    args.destination = process_path(args.destination)
-    return args
+    if repo_is_local(opts.repository):
+        opts.repository = process_path(opts.repository)
+    opts.destination = process_path(opts.destination)
+    return opts
 
 
 def repo_is_local(repository):
