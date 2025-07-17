@@ -72,3 +72,14 @@ If the job is successful, you should have this line near the end of the output l
 d01 2012-02-16_00:00:00 wrf: SUCCESS COMPLETE WRF
 ```
 where the date corresponds to the final time step of the simulation. You should also have `wrfout` and `wrfrst` files in your WRF-Chem `$OUTPUT_DIR`. If so, congrats! You just ran WRF-Chem-Polar.
+
+## What now?
+
+### Save your scripts
+Along with the model version you've run, your namelists and jobscripts contain everything needed to reproduce your simulation by others, or by you in the future. Use [this checklist](https://github.com/Regional-Modeling-LATMOS-IGE/WRF-infra/blob/main/doc/wrfchem-repro-file-checklist.md) to check you've saved everything you need.
+
+### Do science
+The `wrfout` files containing the model output are [netCDF](https://www.unidata.ucar.edu/software/netcdf/) format. Commons tools to visualise and manipulate netCDF data are [NCO](https://github.com/nco/nco), [CDO](https://code.mpimet.mpg.de/projects/cdo/wiki), and the python package [xarray](https://docs.xarray.dev/en/stable/index.html).
+
+More detailed tools and tutorials to examine WRF-Chem-Polar output will be added to this repo in the future. 
+
