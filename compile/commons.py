@@ -57,3 +57,35 @@ def identify_host_platform():
     except KeyError:
         raise NotImplementedError("Unknown host platform: %s." % nodename)
     return platform
+
+
+def process_path(path):
+    """Return a unique absolute version of given path.
+
+    Returns
+    -------
+    str
+        The unique and absolute version of given path.
+
+    """
+    return os.path.abspath(os.path.expanduser(path))
+
+
+def repo_is_local(repository):
+    """Return whether given repository address is local.
+
+    This function only looks at the format of the given character string.
+    Whether the repository is local or remote, this function does not check if
+    the repository exists or not.
+
+    Returns
+    -------
+    bool
+        True if given address is local, False otherwise.
+
+    """
+    return (
+        "@" not in repository
+        and not repository.startswith("http://")
+        and not repository.startswith("https://")
+    )

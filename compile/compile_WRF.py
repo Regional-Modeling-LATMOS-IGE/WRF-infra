@@ -93,42 +93,10 @@ def get_options():
         opts = parser.parse_args()
     if opts.repository.startswith("http://"):
         raise ValueError("We do not allow http connections (not secure).")
-    if repo_is_local(opts.repository):
-        opts.repository = process_path(opts.repository)
-    opts.destination = process_path(opts.destination)
+    if cms.repo_is_local(opts.repository):
+        opts.repository = cms.process_path(opts.repository)
+    opts.destination = cms.process_path(opts.destination)
     return opts
-
-
-def repo_is_local(repository):
-    """Return whether given repository address is local.
-
-    This function only looks at the format of the given character string.
-    Whether the repository is local or remote, this function does not check if
-    the repository exists or not.
-
-    Returns
-    -------
-    bool
-        True if given address is local, False otherwise.
-
-    """
-    return (
-        "@" not in repository
-        and not repository.startswith("http://")
-        and not repository.startswith("https://")
-    )
-
-
-def process_path(path):
-    """Return a unique absolute version of given path.
-
-    Returns
-    -------
-    str
-        The unique and absolute version of given path.
-
-    """
-    return os.path.abspath(os.path.expanduser(path))
 
 
 def run(args, **kwargs):
@@ -166,7 +134,7 @@ def clone_and_checkout(opts):
 
     """
     clone_it = (
-        not repo_is_local(opts.repository)
+        not cms.repo_is_local(opts.repository)
         or opts.repository != opts.destination
         or not os.path.lexists(opts.destination)
     )
@@ -203,7 +171,7 @@ def prepare_job_script(opts):
     """
     # Platform, directories, and files
     host = cms.identify_host_platform()
-    infra = process_path(os.path.join(os.path.dirname(__file__), ".."))
+    infra = cms.process_path(os.path.join(os.path.dirname(__file__), ".."))
     envfile = os.path.join(infra, "env", "%s.sh" % host)
     script = os.path.join(opts.destination, opts.script)
 
@@ -232,6 +200,9 @@ def prepare_job_script(opts):
         "./configure",
     ]
 
+    # Add the call to ./compile
+    lines += ["./compile em_real"]
+
     # Write the script
     with open(script, mode="x") as f:
         f.write("\n".join(lines))
@@ -252,4 +223,8 @@ clone_and_checkout(opts)
 
 prepare_job_script(opts)
 
-run(["./%s" % opts.script], cwd=opts.destination)
+if opts.scheduler:
+    cmd = [dict(spirit="sbatch")[host], opts.script]
+else:
+    cmd = ["./%s" % opts.script]
+run(cmd, cwd=opts.destination)
