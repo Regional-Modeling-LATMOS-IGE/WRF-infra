@@ -208,19 +208,35 @@ def prepare_job_script(opts):
     script = os.path.join(opts.destination, opts.script)
 
     # Prepare header of file (hash bang and scheduler options)
-    lines = ["#!/bin/bash", ""]
-    if opts.scheduler and host in ("spirit",):
-        lines += slurm_options()
+    lines = ["#!/bin/bash"]
+    if opts.scheduler:
+        if host in ("spirit",):
+            lines += slurm_options()
+        else:
+            raise NotImplementedError("Unsupported host: %s." % host)
 
     # Platform-specific environment
     with open(envfile) as f:
         env = [line.strip() for line in f.readlines()]
     lines += [line for line in env if line != "" and not line.startswith("#")]
+    netcdf = dict(spirit="$NETCDF_FORTRAN_ROOT")[host]
+    hdf5 = dict(spirit="$HDF5_ROOT")[host]
+    setup = dict(spirit=34)[host]
+    nesting = 1
+
+    # Add the call to ./configure
+    lines += [
+        "echo %d %d |\\" % (setup, nesting),
+        "NETCDF=%s \\" % netcdf,
+        "HDF5=%s \\" % hdf5,
+        "./configure",
+    ]
 
     # Write the script
     with open(script, mode="x") as f:
         f.write("\n".join(lines))
         f.write("\n")
+    run(["chmod", "744", opts.script], cwd=opts.destination)
 
 
 if __name__ != "__main__":
@@ -235,3 +251,5 @@ print("Options:", opts)
 clone_and_checkout(opts)
 
 prepare_job_script(opts)
+
+run(["./%s" % opts.script], cwd=opts.destination)
