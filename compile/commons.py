@@ -9,6 +9,7 @@ License: BSD 3-clause "new" or "revised" license (BSD-3-Clause).
 import os
 import functools
 import argparse
+import subprocess
 
 URL_GITHUB = "https://github.com"
 URL_GROUP = "%s/Regional-Modeling-LATMOS-IGE" % URL_GITHUB
@@ -89,3 +90,31 @@ def repo_is_local(repository):
         and not repository.startswith("http://")
         and not repository.startswith("https://")
     )
+
+
+def run(args, **kwargs):
+    """Run given command and arguments as a subprocess.
+
+    Parameters
+    ----------
+    args: sequence
+        The command to run and its arguments, eg. ["grep", "-v", "some text"].
+    kwargs: dict
+        These are passed "as is" to subprocess.run.
+
+    Returns
+    -------
+    subprocess.CompletedProcess
+        The result of running the command.
+
+    Raises
+    ------
+    RuntimeError
+        If the command returns a non-zero exit code.
+
+    """
+    out = subprocess.run(args, **kwargs)
+    if out.returncode != 0:
+        msg = "Command '%s' exited with non-zero return code." % " ".join(args)
+        raise RuntimeError(msg)
+    return out

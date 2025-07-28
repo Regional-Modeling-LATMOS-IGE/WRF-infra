@@ -10,7 +10,6 @@ import sys
 import os.path
 import argparse
 import json
-import subprocess
 import commons as cms
 
 
@@ -51,11 +50,6 @@ def get_argparser():
         "--git",
         help="Git command (useful to use a non-default installation).",
         default="git",
-    )
-    parser.add_argument(
-        "--script",
-        help="Name of the installation script.",
-        default="compile.job",
     )
     parser.add_argument(
         "--scheduler",
@@ -99,28 +93,6 @@ def get_options():
     return opts
 
 
-def run(args, **kwargs):
-    """Run given command and arguments as a subprocess.
-
-    Parameters
-    ----------
-    args: sequence
-        The command to run and its arguments, eg. ["grep", "-v", "some text"].
-    kwargs: dict
-        These are passed "as is" to subprocess.run.
-
-    Raises
-    ------
-    RuntimeError
-        If the command returns a non-zero exit code.
-
-    """
-    out = subprocess.run(args, **kwargs)
-    if out.returncode != 0:
-        msg = "Command '%s' exited with non-zero return code." % " ".join(args)
-        raise RuntimeError(msg)
-
-
 def clone_and_checkout(opts):
     """Clone the WRF repository and checkout the required commit.
 
@@ -139,8 +111,8 @@ def clone_and_checkout(opts):
         or not os.path.lexists(opts.destination)
     )
     if clone_it:
-        run([opts.git, "clone", opts.repository, opts.destination])
-    run([opts.git, "checkout", opts.commit], cwd=opts.destination)
+        cms.run([opts.git, "clone", opts.repository, opts.destination])
+    cms.run([opts.git, "checkout", opts.commit], cwd=opts.destination)
 
 
 def slurm_options():
@@ -173,7 +145,7 @@ def prepare_job_script(opts):
     host = cms.identify_host_platform()
     infra = cms.process_path(os.path.join(os.path.dirname(__file__), ".."))
     envfile = os.path.join(infra, "env", "%s.sh" % host)
-    script = os.path.join(opts.destination, opts.script)
+    script = os.path.join(opts.destination, "compile.job")
 
     # Prepare header of file (hash bang and scheduler options)
     lines = ["#!/bin/bash"]
@@ -207,7 +179,30 @@ def prepare_job_script(opts):
     with open(script, mode="x") as f:
         f.write("\n".join(lines))
         f.write("\n")
-    run(["chmod", "744", opts.script], cwd=opts.destination)
+    cms.run(["chmod", "744", script], cwd=opts.destination)
+
+
+def write_options(opts):
+    """Write installation options into file for future reproducibility.
+
+    Parameters
+    ----------
+    opts: Namespace
+        The pre-processed user-defined installation options.
+
+    """
+    opts_dict = dict((key, value) for key, value in vars(opts).items())
+    opts_dict.pop("optfile")
+    opts_dict["commit"] = cms.run(
+        ["git", "rev-parse", "HEAD"],
+        cwd=opts.destination,
+        capture_output=True,
+        text=True,
+    ).stdout[:-1]
+    optfile = os.path.join(opts.destination, "compile.json")
+    with open(optfile, mode="x") as f:
+        json.dump(opts_dict, f, sort_keys=True, indent=4)
+        f.write("\n")
 
 
 if __name__ != "__main__":
@@ -221,10 +216,12 @@ print("Options:", opts)
 
 clone_and_checkout(opts)
 
+write_options(opts)
+
 prepare_job_script(opts)
 
 if opts.scheduler:
-    cmd = [dict(spirit="sbatch")[host], opts.script]
+    cmd = [dict(spirit="sbatch")[host], "compile.job"]
 else:
-    cmd = ["./%s" % opts.script]
-run(cmd, cwd=opts.destination)
+    cmd = ["./compile.job"]
+cms.run(cmd, cwd=opts.destination)
