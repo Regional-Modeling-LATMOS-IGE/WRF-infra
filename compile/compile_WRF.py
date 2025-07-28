@@ -6,12 +6,14 @@ License: BSD 3-clause "new" or "revised" license (BSD-3-Clause).
 
 """
 
+import sys
 import os
 import os.path
 import argparse
 import json
 import subprocess
 import commons as cms
+
 
 def identify_host_platform():
     """Return a character string that identifies the host platform."""
@@ -96,9 +98,11 @@ def repo_is_local(repository):
     check if the repository exists or not.
 
     """
-    return (not "@" in repository
-            and not repository.startswith("http://")
-            and not repository.startswith("https://"))
+    return (
+        "@" not in repository
+        and not repository.startswith("http://")
+        and not repository.startswith("https://")
+    )
 
 
 def process_path(path):
@@ -121,20 +125,23 @@ def clone_and_checkout(opts):
     no git-cloning is done.
 
     """
-    clone_it = (not repo_is_local(opts.repository)
-                or opts.repository != opts.destination
-                or not os.path.lexists(opts.destination))
+    clone_it = (
+        not repo_is_local(opts.repository)
+        or opts.repository != opts.destination
+        or not os.path.lexists(opts.destination)
+    )
     if clone_it:
         run([opts.git, "clone", opts.repository, opts.destination])
     run([opts.git, "checkout", opts.commit], cwd=opts.destination)
 
 
-if __name__ == "__main__":
+if __name__ != "__main__":
+    sys.exit(0)
 
-    host = identify_host_platform()
-    print("Host platform is: %s" % host)
+host = identify_host_platform()
+print("Host platform is: %s" % host)
 
-    opts = get_options()
-    print("Options:", opts)
+opts = get_options()
+print("Options:", opts)
 
-    clone_and_checkout(opts)
+clone_and_checkout(opts)
