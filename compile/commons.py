@@ -6,6 +6,8 @@ License: BSD 3-clause "new" or "revised" license (BSD-3-Clause).
 
 """
 
+import os
+import functools
 import argparse
 
 URL_GITHUB = "https://github.com"
@@ -33,3 +35,25 @@ class ConvertToBoolean(argparse.Action):
         else:
             raise ValueError('Could not convert "%s" to boolean.' % values)
         setattr(namespace, option_string, values)
+
+
+@functools.lru_cache
+def identify_host_platform():
+    """Return the identity of the host platform.
+
+    Returns
+    -------
+    str
+        The identity of the host platform.
+
+    """
+    known_plateforms = {
+        "spirit1.ipsl.Fr": "spirit",
+        "spirit2.ipsl.fr": "spirit",
+    }
+    nodename = os.uname().nodename
+    try:
+        platform = known_plateforms[nodename]
+    except KeyError:
+        raise NotImplementedError("Unknown host platform: %s." % nodename)
+    return platform

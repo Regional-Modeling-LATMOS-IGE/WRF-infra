@@ -7,35 +7,11 @@ License: BSD 3-clause "new" or "revised" license (BSD-3-Clause).
 """
 
 import sys
-import os
 import os.path
-import functools
 import argparse
 import json
 import subprocess
 import commons as cms
-
-
-@functools.lru_cache
-def identify_host_platform():
-    """Return the identity of the host platform.
-
-    Returns
-    -------
-    str
-        The identity of the host platform.
-
-    """
-    known_plateforms = {
-        "spirit1.ipsl.Fr": "spirit",
-        "spirit2.ipsl.fr": "spirit",
-    }
-    nodename = os.uname().nodename
-    try:
-        platform = known_plateforms[nodename]
-    except KeyError:
-        raise NotImplementedError("Unknown host platform: %s." % nodename)
-    return platform
 
 
 def get_argparser():
@@ -226,7 +202,7 @@ def prepare_job_script(opts):
 
     """
     # Platform, directories, and files
-    host = identify_host_platform()
+    host = cms.identify_host_platform()
     infra = process_path(os.path.join(os.path.dirname(__file__), ".."))
     envfile = os.path.join(infra, "env", "%s.sh" % host)
     script = os.path.join(opts.destination, opts.script)
@@ -250,7 +226,7 @@ def prepare_job_script(opts):
 if __name__ != "__main__":
     sys.exit(0)
 
-host = identify_host_platform()
+host = cms.identify_host_platform()
 print("Host platform is: %s" % host)
 
 opts = get_options()
