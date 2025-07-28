@@ -16,7 +16,14 @@ import commons as cms
 
 
 def identify_host_platform():
-    """Return a character string that identifies the host platform."""
+    """Return the identity of the host platform.
+
+    Returns
+    -------
+    str
+        The identity of the host platform.
+
+    """
     known_plateforms = {
         "spirit1.ipsl.Fr": "spirit",
         "spirit2.ipsl.fr": "spirit",
@@ -30,7 +37,14 @@ def identify_host_platform():
 
 
 def get_argparser():
-    """Return command-line arguments parser."""
+    """Return the object that parses command-line arguments.
+
+    Returns
+    -------
+    argparse.ArgumentParser
+        The object that parses command-line arguments.
+
+    """
     parser = argparse.ArgumentParser(
         description="Compile WRF.",
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -64,10 +78,16 @@ def get_argparser():
 
 
 def get_options():
-    """Get and pre-process the installation options.
+    """Return the pre-processed installation options.
 
-    Command-line arguments have priority over options specified in the
-    (optional) option file.
+    Options are read from the command line, and optionally from an "option
+    file" (--optfile=/path/to/this/file at the command line). Command-line
+    arguments have priority over the option file.
+
+    Returns
+    -------
+    Namespace
+        The pre-processed user-defined installation options.
 
     """
     parser = get_argparser()
@@ -91,11 +111,16 @@ def get_options():
 
 
 def repo_is_local(repository):
-    """Return True iff given repository address is local.
+    """Return whether given repository address is local.
 
-    This function only looks at the format of the given character
-    string. Whether the repository is local or remote, this function does not
-    check if the repository exists or not.
+    This function only looks at the format of the given character string.
+    Whether the repository is local or remote, this function does not check if
+    the repository exists or not.
+
+    Returns
+    -------
+    bool
+        True if given address is local, False otherwise.
 
     """
     return (
@@ -106,12 +131,33 @@ def repo_is_local(repository):
 
 
 def process_path(path):
-    """Return a (hopefully) unique absolute version of given path."""
+    """Return a unique absolute version of given path.
+
+    Returns
+    -------
+    str
+        The unique and absolute version of given path.
+
+    """
     return os.path.abspath(os.path.expanduser(path))
 
 
 def run(args, **kwargs):
-    """Run given command+arguments as a subprocess, exception if problem."""
+    """Run given command and arguments as a subprocess.
+
+    Parameters
+    ----------
+    args: sequence
+        The command to run and its arguments, eg. ["grep", "-v", "some text"].
+    kwargs: dict
+        These are passed "as is" to subprocess.run.
+
+    Raises
+    ------
+    RuntimeError
+        If the command returns a non-zero exit code.
+
+    """
     out = subprocess.run(args, **kwargs)
     if out.returncode != 0:
         msg = "Command '%s' exited with non-zero return code." % " ".join(args)
@@ -119,10 +165,15 @@ def run(args, **kwargs):
 
 
 def clone_and_checkout(opts):
-    """Clone the WRF code and checkout the required commit.
+    """Clone the WRF repository and checkout the required commit.
 
     If the repository is local and if it is the same as the destination, then
     no git-cloning is done.
+
+    Parameters
+    ----------
+    opts: Namespace
+        The pre-processed user-defined installation options.
 
     """
     clone_it = (
