@@ -9,12 +9,14 @@ License: BSD 3-clause "new" or "revised" license (BSD-3-Clause).
 import sys
 import os
 import os.path
+import functools
 import argparse
 import json
 import subprocess
 import commons as cms
 
 
+@functools.lru_cache
 def identify_host_platform():
     """Return the identity of the host platform.
 
@@ -73,6 +75,17 @@ def get_argparser():
         "--git",
         help="Git command (useful to use a non-default installation).",
         default="git",
+    )
+    parser.add_argument(
+        "--script",
+        help="Name of the installation script.",
+        default="compile.job",
+    )
+    parser.add_argument(
+        "--scheduler",
+        help="Whether or not to compile in a scheduled job.",
+        action=cms.ConvertToBoolean,
+        default=False,
     )
     return parser
 
@@ -186,6 +199,54 @@ def clone_and_checkout(opts):
     run([opts.git, "checkout", opts.commit], cwd=opts.destination)
 
 
+def slurm_options():
+    """Prepare slurm options.
+
+    Returns
+    -------
+    [str]
+        The lines of text that contain the slurm options.
+
+    """
+    slurm = {
+        "ntasks": "1",
+        "ntasks-per-node": "1",
+        "time": "01:00:00",
+    }
+    return ["#SBATCH --%s=%s" % (key, value) for key, value in slurm.items()]
+
+
+def prepare_job_script(opts):
+    """Create the job script.
+
+    Parameters
+    ----------
+    opts: Namespace
+        The pre-processed user-defined installation options.
+
+    """
+    # Platform, directories, and files
+    host = identify_host_platform()
+    infra = process_path(os.path.join(os.path.dirname(__file__), ".."))
+    envfile = os.path.join(infra, "env", "%s.sh" % host)
+    script = os.path.join(opts.destination, opts.script)
+
+    # Prepare header of file (hash bang and scheduler options)
+    lines = ["#!/bin/bash", ""]
+    if opts.scheduler and host in ("spirit",):
+        lines += slurm_options()
+
+    # Platform-specific environment
+    with open(envfile) as f:
+        env = [line.strip() for line in f.readlines()]
+    lines += [line for line in env if line != "" and not line.startswith("#")]
+
+    # Write the script
+    with open(script, mode="x") as f:
+        f.write("\n".join(lines))
+        f.write("\n")
+
+
 if __name__ != "__main__":
     sys.exit(0)
 
@@ -196,3 +257,5 @@ opts = get_options()
 print("Options:", opts)
 
 clone_and_checkout(opts)
+
+prepare_job_script(opts)
