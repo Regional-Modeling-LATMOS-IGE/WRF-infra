@@ -28,7 +28,7 @@ def get_argparser():
     )
     parser.add_argument(
         "--optfile",
-        help="File containing compiling options (JSON format).",
+        help="File containing compilation options (JSON format).",
         default=None,
     )
     parser.add_argument(
@@ -56,6 +56,11 @@ def get_argparser():
         help="Whether or not to compile in a scheduled job.",
         action=cms.ConvertToBoolean,
         default=False,
+    )
+    parser.add_argument(
+        "--wrfoptions",
+        help="A comma-separated list of WRF options.",
+        default="kpp,chem",
     )
     return parser
 
@@ -90,6 +95,10 @@ def get_options():
     if cms.repo_is_local(opts.repository):
         opts.repository = cms.process_path(opts.repository)
     opts.destination = cms.process_path(opts.destination)
+    if opts.wrfoptions.strip() == "":
+        opts.wrfoptions = []
+    else:
+        opts.wrfoptions = [i.strip() for i in opts.wrfoptions.split(",")]
     return opts
 
 
@@ -132,6 +141,34 @@ def slurm_options():
     return ["#SBATCH --%s=%s" % (key, value) for key, value in slurm.items()]
 
 
+def wrf_options(opts):
+    """Prepare WRF options.
+
+    Parameters
+    ----------
+    opts: Namespace
+        The pre-processed user-defined installation options.
+
+    Returns
+    -------
+    str
+        The WRF options, formatted to be passed to the configure script.
+
+    """
+    config_file = os.path.join(opts.destination, "configure")
+    valid_options = cms.run(
+        ["grep", "-E", "^      [a-zA-Z0-9]+).+=.+;;$", config_file],
+        cwd=opts.destination,
+        capture_output=True,
+        text=True,
+    ).stdout[:-1].split("\n")
+    valid_options = [o.split(")")[0].strip() for o in valid_options]
+    if any(o not in valid_options for o in opts.wrfoptions):
+        raise RuntimeError("There are some invalid WRF options.")
+    options = " ".join(opts.wrfoptions)
+    return options if len(options) == 0 else " " + options
+
+
 def prepare_job_script(opts):
     """Create the job script.
 
@@ -169,7 +206,7 @@ def prepare_job_script(opts):
         "echo %d %d |\\" % (setup, nesting),
         "NETCDF=%s \\" % netcdf,
         "HDF5=%s \\" % hdf5,
-        "./configure",
+        "./configure%s" % wrf_options(opts),
     ]
 
     # Add the call to ./compile
@@ -193,12 +230,14 @@ def write_options(opts):
     """
     opts_dict = dict((key, value) for key, value in vars(opts).items())
     opts_dict.pop("optfile")
+    opts_dict.pop("destination")
     opts_dict["commit"] = cms.run(
         ["git", "rev-parse", "HEAD"],
         cwd=opts.destination,
         capture_output=True,
         text=True,
     ).stdout[:-1]
+    opts_dict["wrfoptions"] = ",".join(opts_dict["wrfoptions"])
     optfile = os.path.join(opts.destination, "compile.json")
     with open(optfile, mode="x") as f:
         json.dump(opts_dict, f, sort_keys=True, indent=4)
