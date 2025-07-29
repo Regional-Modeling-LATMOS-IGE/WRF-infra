@@ -161,9 +161,10 @@ def wrf_options(opts):
         cwd=opts.destination,
         capture_output=True,
         text=True,
-    ).stdout[:-1].split("\n")
-    valid_options = [o.split(")")[0].strip() for o in valid_options]
-    if any(o not in valid_options for o in opts.wrfoptions):
+    ).stdout
+    valid_options = valid_options[:-1].split("\n")
+    valid_options = [option.split(")")[0].strip() for option in valid_options]
+    if any(option not in valid_options for option in opts.wrfoptions):
         raise RuntimeError("There are some invalid WRF options.")
     options = " ".join(opts.wrfoptions)
     return options if len(options) == 0 else " " + options
