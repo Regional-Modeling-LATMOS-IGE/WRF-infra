@@ -53,6 +53,8 @@ See below for an example of such a JSON file.
 
  - `scheduler`: whether to use the system's scheduler (eg. slurm on Spirit) to do the compilation.
 
+ - `executable`: the name of the WRF executable to compile (note that the main WRF model executable is called `em_real`).
+
  - `wrfoptions`: a comma-separated list of options to pass to WRF's configure script. These are used, for example, to (de)activate the compilation of WRF-Chem. See the file `configure` in the WRF repository for a list of available options. Only the options whose names do not start with a dash are supported.
 
 > [!NOTE]
@@ -67,6 +69,7 @@ See below for an example of such a JSON file.
     "destination": "./WRF",
     "git": "git",
     "scheduler": "no",
+    "executable": "em_real",
     "wrfoptions": "kpp,chem"
 }
 ```

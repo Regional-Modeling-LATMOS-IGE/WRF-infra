@@ -58,6 +58,11 @@ def get_argparser():
         default=False,
     )
     parser.add_argument(
+        "--executable",
+        help="Which WRF executable to compile.",
+        default="em_real",
+    )
+    parser.add_argument(
         "--wrfoptions",
         help="A comma-separated list of WRF options.",
         default="kpp,chem",
@@ -194,6 +199,9 @@ def environment_variables(opts):
     # explicitly set the WRF_KPP variable
     if "kpp" in opts.wrfoptions:
         env_vars["WRF_KPP"] = "1"
+    # If non-standard, specify the location of the flex library explicitly
+    if host == "spirit":
+        env_vars["FLEX_LIB_DIR"] = "/usr/lib/x86_64-linux-gnu"
     return ["%s=%s \\" % (k, v) for k, v in env_vars.items()]
 
 
@@ -235,7 +243,7 @@ def prepare_job_script(opts):
 
     # Add the call to ./compile
     lines += env_vars
-    lines.append("./compile em_real")
+    lines.append("./compile %s" % opts.executable)
 
     # Write the script
     with open(script, mode="x") as f:
