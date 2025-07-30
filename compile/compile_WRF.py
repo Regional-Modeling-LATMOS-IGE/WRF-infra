@@ -170,6 +170,33 @@ def wrf_options(opts):
     return options if len(options) == 0 else " " + options
 
 
+def environment_variables(opts):
+    """Prepare the compilation environment variables.
+
+    Parameters
+    ----------
+    opts: Namespace
+        The pre-processed user-defined installation options.
+
+    Returns
+    -------
+    [str]
+        The lines setting environment variables (to prepend to installation
+        scripts, namely configure and compile).
+
+    """
+    host = cms.identify_host_platform()
+    env_vars = dict(
+        NETCDF=dict(spirit="$NETCDF_FORTRAN_ROOT")[host],
+        HDF5=dict(spirit="$HDF5_ROOT")[host],
+    )
+    # For some reason, just using the kpp option is not enough, one also has to
+    # explicitly set the WRF_KPP variable
+    if "kpp" in opts.wrfoptions:
+        env_vars["WRF_KPP"] = "1"
+    return ["%s=%s \\" % (k, v) for k, v in env_vars.items()]
+
+
 def prepare_job_script(opts):
     """Create the job script.
 
@@ -197,21 +224,18 @@ def prepare_job_script(opts):
     with open(envfile) as f:
         env = [line.strip() for line in f.readlines()]
     lines += [line for line in env if line != "" and not line.startswith("#")]
-    netcdf = dict(spirit="$NETCDF_FORTRAN_ROOT")[host]
-    hdf5 = dict(spirit="$HDF5_ROOT")[host]
+    env_vars = environment_variables(opts)
     setup = dict(spirit=34)[host]
     nesting = 1
 
     # Add the call to ./configure
-    lines += [
-        "echo %d %d |\\" % (setup, nesting),
-        "NETCDF=%s \\" % netcdf,
-        "HDF5=%s \\" % hdf5,
-        "./configure%s" % wrf_options(opts),
-    ]
+    lines.append("echo %d %d | \\" % (setup, nesting))
+    lines += env_vars
+    lines.append("./configure%s" % wrf_options(opts))
 
     # Add the call to ./compile
-    lines += ["./compile em_real"]
+    lines += env_vars
+    lines.append("./compile em_real")
 
     # Write the script
     with open(script, mode="x") as f:

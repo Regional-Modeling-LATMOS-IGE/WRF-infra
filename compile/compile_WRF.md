@@ -20,7 +20,7 @@ Use:
 python compile_WRF.py --help
 ```
 
-for a quick summary of all installation options, and see sections below for a more detailed description.
+for a quick summary of all installation options. See sections below for a more detailed description.
 
 Options can also be specified in a JSON input file, using the command-line argument `--optfile`, for example:
 
