@@ -13,7 +13,7 @@ import json
 import commons as cms
 
 
-def get_argparser():
+def prepare_argparser():
     """Return the object that parses command-line arguments.
 
     Returns
@@ -63,8 +63,8 @@ def get_argparser():
         default="em_real",
     )
     parser.add_argument(
-        "--wrfoptions",
-        help="A comma-separated list of WRF options.",
+        "--components",
+        help="A comma-separated list of additional WRF components to compile.",
         default="kpp,chem",
     )
     parser.add_argument(
@@ -93,7 +93,7 @@ def get_options():
         The pre-processed user-defined installation options.
 
     """
-    parser = get_argparser()
+    parser = prepare_argparser()
     opts = parser.parse_args()
     if opts.optfile is not None:
         with open(opts.optfile) as f:
@@ -110,10 +110,10 @@ def get_options():
     if cms.repo_is_local(opts.repository):
         opts.repository = cms.process_path(opts.repository)
     opts.destination = cms.process_path(opts.destination)
-    if opts.wrfoptions.strip() == "":
-        opts.wrfoptions = []
+    if opts.components.strip() == "":
+        opts.components = []
     else:
-        opts.wrfoptions = [i.strip() for i in opts.wrfoptions.split(",")]
+        opts.components = [comp.strip() for comp in opts.components.split(",")]
     opts.patches = cms.process_path(opts.patches)
     opts.sources = cms.process_path(opts.sources)
     return opts
@@ -139,7 +139,7 @@ def clone_and_checkout(opts):
     cms.run([opts.git, "checkout", opts.commit], cwd=opts.destination)
 
 
-def slurm_options():
+def prepare_slurm_options():
     """Prepare slurm options.
 
     Returns
@@ -160,8 +160,8 @@ def slurm_options():
     return ["#SBATCH --%s=%s" % (key, value) for key, value in slurm.items()]
 
 
-def wrf_options(opts):
-    """Prepare WRF options.
+def prepare_components(opts):
+    """Prepare WRF components.
 
     Parameters
     ----------
@@ -175,21 +175,16 @@ def wrf_options(opts):
 
     """
     config_file = os.path.join(opts.destination, "configure")
-    valid_options = cms.run(
-        ["grep", "-E", "^      [a-zA-Z0-9]+).+=.+;;$", config_file],
-        cwd=opts.destination,
-        capture_output=True,
-        text=True,
-    ).stdout
-    valid_options = valid_options[:-1].split("\n")
-    valid_options = [option.split(")")[0].strip() for option in valid_options]
-    if any(option not in valid_options for option in opts.wrfoptions):
-        raise RuntimeError("There are some invalid WRF options.")
-    options = " ".join(opts.wrfoptions)
-    return options if len(options) == 0 else " " + options
+    cmd = ["grep", "-E", "^      [a-zA-Z0-9]+).+=.+;;$", config_file]
+    valid_comps = cms.run_stdout(cmd, cwd=opts.destination)
+    valid_comps = [comp.split(")")[0].strip() for comp in valid_comps]
+    if any(comp not in valid_comps for comp in opts.components):
+        raise RuntimeError("There are some invalid WRF extra components.")
+    components = " ".join(opts.components)
+    return components if len(components) == 0 else " " + components
 
 
-def environment_variables(opts):
+def prepare_environment_variables(opts):
     """Prepare the compilation environment variables.
 
     Parameters
@@ -211,7 +206,7 @@ def environment_variables(opts):
     )
     # For some reason, just using the kpp option is not enough, one also has to
     # explicitly set the WRF_KPP variable
-    if "kpp" in opts.wrfoptions:
+    if "kpp" in opts.components:
         env_vars["WRF_KPP"] = "1"
     # If non-standard, specify the location of the flex library explicitly
     if host == "spirit":
@@ -221,7 +216,7 @@ def environment_variables(opts):
     return ['%s="%s" \\' % (k, v) for k, v in env_vars.items()]
 
 
-def prepare_job_script(opts):
+def write_job_script(opts):
     """Create the job script.
 
     Parameters
@@ -240,7 +235,7 @@ def prepare_job_script(opts):
     lines = ["#!/bin/bash"]
     if opts.scheduler:
         if host in ("spirit",):
-            lines += slurm_options()
+            lines += prepare_slurm_options()
         else:
             raise NotImplementedError("Unsupported host: %s." % host)
 
@@ -248,14 +243,14 @@ def prepare_job_script(opts):
     with open(envfile) as f:
         env = [line.strip() for line in f.readlines()]
     lines += [line for line in env if line != "" and not line.startswith("#")]
-    env_vars = environment_variables(opts)
+    env_vars = prepare_environment_variables(opts)
     setup = dict(spirit=34)[host]
     nesting = 1
 
     # Add the call to ./configure
     lines.append("echo %d %d | \\" % (setup, nesting))
     lines += env_vars
-    lines.append("./configure%s" % wrf_options(opts))
+    lines.append("./configure%s" % prepare_components(opts))
 
     # Add the call to ./compile
     lines += env_vars
@@ -280,13 +275,9 @@ def write_options(opts):
     opts_dict = dict((key, value) for key, value in vars(opts).items())
     opts_dict.pop("optfile")
     opts_dict.pop("destination")
-    opts_dict["commit"] = cms.run(
-        ["git", "rev-parse", "HEAD"],
-        cwd=opts.destination,
-        capture_output=True,
-        text=True,
-    ).stdout[:-1]
-    opts_dict["wrfoptions"] = ",".join(opts_dict["wrfoptions"])
+    cmd = ["git", "rev-parse", "HEAD"]
+    opts_dict["commit"] = cms.run_stdout(cmd, cwd=opts.destination)[0]
+    opts_dict["components"] = ",".join(opts_dict["components"])
     optfile = os.path.join(opts.destination, "compile.json")
     with open(optfile, mode="x") as f:
         json.dump(opts_dict, f, sort_keys=True, indent=4)
@@ -304,12 +295,8 @@ def process_patches(opts):
     """
     if opts.patches is None:
         return
-    patches = cms.run(
-        ["find", opts.patches, "-type", "f", "-name", "*.patch"],
-        capture_output=True,
-        text=True,
-    ).stdout[:-1]
-    patches = [cms.process_path(patch) for patch in patches.split("\n")]
+    cmd = ["find", opts.patches, "-type", "f", "-name", "*.patch"]
+    patches = [cms.process_path(patch) for patch in cms.run_stdout(cmd)]
     n = len(opts.patches) + 1
     for patch in patches:
         path_in_repo = os.path.join(opts.destination, patch[n:-6])
@@ -331,12 +318,8 @@ def process_extra_sources(opts):
     """
     if opts.sources is None:
         return
-    sources = cms.run(
-        ["find", opts.sources, "-type", "f"],
-        capture_output=True,
-        text=True,
-    ).stdout[:-1]
-    sources = [cms.process_path(src) for src in sources.split("\n")]
+    cmd = ["find", opts.sources, "-type", "f"]
+    sources = [cms.process_path(src) for src in cms.run_stdout(cmd)]
     n = len(opts.sources) + 1
     for src in sources:
         path_in_repo = os.path.join(opts.destination, src[n:])
@@ -356,11 +339,11 @@ clone_and_checkout(opts)
 
 write_options(opts)
 
-prepare_job_script(opts)
-
 process_patches(opts)
 
 process_extra_sources(opts)
+
+write_job_script(opts)
 
 if opts.scheduler:
     cmd = [dict(spirit="sbatch")[host], "compile.job"]

@@ -55,7 +55,7 @@ See below for an example of such a JSON file.
 
  - `executable`: the name of the WRF executable to compile (note that the main WRF model executable is called `em_real`).
 
- - `wrfoptions`: a comma-separated list of options to pass to WRF's configure script. These are used, for example, to (de)activate the compilation of WRF-Chem. See the file `configure` in the WRF repository for a list of available options. Only the options whose names do not start with a dash are supported.
+ - `components`: a comma-separated list of extra WRF components to compile. These are used, for example, to (de)activate the compilation of WRF-Chem. See the file `configure` in the WRF repository for a list of available components.
 
  - `patches`: the path to the directory containing patches. For example, if you want to patch the file `chem/chem_driver.F` before compilation, create a directory containing the patch (eg. `~/my-patches/chem/chem_driver.F.patch`), and use this option as `--patches=~/my-patches`. This option has no default value.
 
@@ -74,6 +74,6 @@ See below for an example of such a JSON file.
     "git": "git",
     "scheduler": "no",
     "executable": "em_real",
-    "wrfoptions": "kpp,chem"
+    "components": "kpp,chem"
 }
 ```

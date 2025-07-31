@@ -127,3 +127,32 @@ def run(args, **kwargs):
         msg = "Command '%s' exited with non-zero return code." % " ".join(args)
         raise RuntimeError(msg)
     return out
+
+
+def run_stdout(args, **kwargs):
+    """Run given command and arguments as a subprocess and return stdout.
+
+    Parameters
+    ----------
+    args: sequence
+        The command to run and its arguments, eg. ["grep", "-v", "some text"].
+    kwargs: dict
+        These are passed "as is" to subprocess.run, but cannot contain
+        "capture_output" nor "text".
+
+    Returns
+    -------
+    [str]
+        The standard output of the command (one string per line).
+
+    Raises
+    ------
+    RuntimeError
+        If the command returns a non-zero exit code.
+
+    """
+    for kwarg in ("capture_output", "text"):
+        if kwarg in kwargs:
+            raise ValueError("Keyword argument %s is forbidden." % kwarg)
+    out = run(args, capture_output=True, text=True, **kwargs)
+    return out.stdout[:-1].split("\n")
