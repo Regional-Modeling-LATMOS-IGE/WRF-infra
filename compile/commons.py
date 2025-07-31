@@ -63,13 +63,22 @@ def identify_host_platform():
 def process_path(path):
     """Return a unique absolute version of given path.
 
+    Parameters
+    ----------
+    path: str | None
+        The path to process.
+
     Returns
     -------
-    str
-        The unique and absolute version of given path.
+    str | None
+        The unique and absolute version of given path (or None if given path is
+        empty or None)
 
     """
-    return os.path.abspath(os.path.expanduser(path))
+    if path is None or path.strip() == "":
+        return None
+    else:
+        return os.path.abspath(os.path.expanduser(path))
 
 
 def repo_is_local(repository):

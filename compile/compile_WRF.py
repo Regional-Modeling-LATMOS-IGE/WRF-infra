@@ -67,6 +67,11 @@ def get_argparser():
         help="A comma-separated list of WRF options.",
         default="kpp,chem",
     )
+    parser.add_argument(
+        "--patches",
+        help="Path to directory containing patches.",
+        default=None,
+    )
     return parser
 
 
@@ -104,6 +109,7 @@ def get_options():
         opts.wrfoptions = []
     else:
         opts.wrfoptions = [i.strip() for i in opts.wrfoptions.split(",")]
+    opts.patches = cms.process_path(opts.patches)
     return opts
 
 
@@ -127,6 +133,9 @@ def clone_and_checkout(opts):
     if clone_it:
         cms.run([opts.git, "clone", opts.repository, opts.destination])
     cms.run([opts.git, "checkout", opts.commit], cwd=opts.destination)
+    if not clone_it:
+        cms.run([opts.git, "clean", "-fdx"], cwd=opts.destination)
+        cms.run([opts.git, "restore", "."], cwd=opts.destination)
 
 
 def slurm_options():
@@ -283,6 +292,33 @@ def write_options(opts):
         f.write("\n")
 
 
+def process_patches(opts):
+    """Apply patches, if any.
+
+    Parameters
+    ----------
+    opts: Namespace
+        The pre-processed user-defined installation options.
+
+    """
+    if opts.patches is None:
+        return
+    patches = cms.run(
+        ["find", opts.patches, "-name", "*.patch"],
+        capture_output=True,
+        text=True,
+    ).stdout[:-1]
+    n = len(opts.patches) + 1
+    patches = [cms.process_path(patch)[n:] for patch in patches.split("\n")]
+    for patch in patches:
+        path_in_repo = os.path.join(opts.destination, patch[:-6])
+        if os.path.exists(path_in_repo):
+            cms.run(["patch", path_in_repo, os.path.join(opts.patches, patch)])
+        else:
+            msg = "Warning: file %s does not exist so cannot be patched."
+            print(msg % path_in_repo)
+
+
 if __name__ != "__main__":
     sys.exit(0)
 
@@ -297,6 +333,8 @@ clone_and_checkout(opts)
 write_options(opts)
 
 prepare_job_script(opts)
+
+process_patches(opts)
 
 if opts.scheduler:
     cmd = [dict(spirit="sbatch")[host], "compile.job"]

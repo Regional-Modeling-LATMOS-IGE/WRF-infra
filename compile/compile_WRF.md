@@ -57,6 +57,8 @@ See below for an example of such a JSON file.
 
  - `wrfoptions`: a comma-separated list of options to pass to WRF's configure script. These are used, for example, to (de)activate the compilation of WRF-Chem. See the file `configure` in the WRF repository for a list of available options. Only the options whose names do not start with a dash are supported.
 
+ - `patches`: the path to the directory containing patches. For example, if you want to patch the file `chem/chem_driver.F` before compilation, create a directory containing the patch (which must be called in this case `chem/chem_driver.F.patch`) and use this option.
+
 > [!NOTE]
 > Boolean options (such as `scheduler`) can be specified as "yes", "y", "true", "t" (similarly for negative values). The values are not case-sensitive.
 
