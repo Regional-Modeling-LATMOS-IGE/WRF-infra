@@ -72,6 +72,11 @@ def get_argparser():
         help="Path to directory containing patches.",
         default=None,
     )
+    parser.add_argument(
+        "--sources",
+        help="Path to directory containing extra sources.",
+        default=None,
+    )
     return parser
 
 
@@ -110,32 +115,28 @@ def get_options():
     else:
         opts.wrfoptions = [i.strip() for i in opts.wrfoptions.split(",")]
     opts.patches = cms.process_path(opts.patches)
+    opts.sources = cms.process_path(opts.sources)
     return opts
 
 
 def clone_and_checkout(opts):
     """Clone the WRF repository and checkout the required commit.
 
-    If the repository is local and if it is the same as the destination, then
-    no git-cloning is done.
-
     Parameters
     ----------
     opts: Namespace
         The pre-processed user-defined installation options.
 
+    Raises
+    ------
+    RuntimeError
+        If the destination already exists.
+
     """
-    clone_it = (
-        not cms.repo_is_local(opts.repository)
-        or opts.repository != opts.destination
-        or not os.path.lexists(opts.destination)
-    )
-    if clone_it:
-        cms.run([opts.git, "clone", opts.repository, opts.destination])
+    if os.path.exists(opts.destination):
+        raise RuntimeError("Destination directory already exists.")
+    cms.run([opts.git, "clone", opts.repository, opts.destination])
     cms.run([opts.git, "checkout", opts.commit], cwd=opts.destination)
-    if not clone_it:
-        cms.run([opts.git, "clean", "-fdx"], cwd=opts.destination)
-        cms.run([opts.git, "restore", "."], cwd=opts.destination)
 
 
 def slurm_options():
@@ -304,19 +305,42 @@ def process_patches(opts):
     if opts.patches is None:
         return
     patches = cms.run(
-        ["find", opts.patches, "-name", "*.patch"],
+        ["find", opts.patches, "-type", "f", "-name", "*.patch"],
         capture_output=True,
         text=True,
     ).stdout[:-1]
+    patches = [cms.process_path(patch) for patch in patches.split("\n")]
     n = len(opts.patches) + 1
-    patches = [cms.process_path(patch)[n:] for patch in patches.split("\n")]
     for patch in patches:
-        path_in_repo = os.path.join(opts.destination, patch[:-6])
+        path_in_repo = os.path.join(opts.destination, patch[n:-6])
         if os.path.exists(path_in_repo):
-            cms.run(["patch", path_in_repo, os.path.join(opts.patches, patch)])
+            cms.run(["patch", path_in_repo, patch])
         else:
             msg = "Warning: file %s does not exist so cannot be patched."
             print(msg % path_in_repo)
+
+
+def process_extra_sources(opts):
+    """Copy extra source files, if any, to the repository.
+
+    Parameters
+    ----------
+    opts: Namespace
+        The pre-processed user-defined installation options.
+
+    """
+    if opts.sources is None:
+        return
+    sources = cms.run(
+        ["find", opts.sources, "-type", "f"],
+        capture_output=True,
+        text=True,
+    ).stdout[:-1]
+    sources = [cms.process_path(src) for src in sources.split("\n")]
+    n = len(opts.sources) + 1
+    for src in sources:
+        path_in_repo = os.path.join(opts.destination, src[n:])
+        cms.run(["cp", "-v", src, path_in_repo])
 
 
 if __name__ != "__main__":
@@ -335,6 +359,8 @@ write_options(opts)
 prepare_job_script(opts)
 
 process_patches(opts)
+
+process_extra_sources(opts)
 
 if opts.scheduler:
     cmd = [dict(spirit="sbatch")[host], "compile.job"]

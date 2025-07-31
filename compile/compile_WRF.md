@@ -43,7 +43,7 @@ See below for an example of such a JSON file.
 
  - `optfile`: the path to a file containing the compilation options, in the JSON format. See below for an example of such a file. This option has no default value.
 
- - `repository`: the address of the WRF repository to clone from. It can be a remote or a local repository. The script **will** clone this repository unless it is a local repository **and** the destination (see below) is the same as the repository.
+ - `repository`: the address of the WRF repository to clone from.
 
  - `commit`: the reference to the specific commit to use. It can be the hash (shortened or not) of the commit, a tag, or the name of the branch, in which case the last commit of the branch will be used (this is conveninent for testing purposes but it is **not** reproducible because the last commit of a branch can change with time).
 
@@ -57,7 +57,9 @@ See below for an example of such a JSON file.
 
  - `wrfoptions`: a comma-separated list of options to pass to WRF's configure script. These are used, for example, to (de)activate the compilation of WRF-Chem. See the file `configure` in the WRF repository for a list of available options. Only the options whose names do not start with a dash are supported.
 
- - `patches`: the path to the directory containing patches. For example, if you want to patch the file `chem/chem_driver.F` before compilation, create a directory containing the patch (which must be called in this case `chem/chem_driver.F.patch`) and use this option.
+ - `patches`: the path to the directory containing patches. For example, if you want to patch the file `chem/chem_driver.F` before compilation, create a directory containing the patch (eg. `~/my-patches/chem/chem_driver.F.patch`), and use this option as `--patches=~/my-patches`. This option has no default value.
+
+ - `sources`: the path to the directory containing additional source files. These files will be copied to the WRF repository before compilation. For example, if you want to replace the file `chem/chem_driver.F` before compilation, create a directory containing your version of this file (eg. `~/custom-src/chem/chem_driver.F.patch`) and use this option as `--sources=~/custom-src`. This option has no default value.
 
 > [!NOTE]
 > Boolean options (such as `scheduler`) can be specified as "yes", "y", "true", "t" (similarly for negative values). The values are not case-sensitive.
