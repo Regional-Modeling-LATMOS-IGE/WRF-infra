@@ -61,8 +61,10 @@ See below for an example of such a JSON file.
 
  - `sources`: the path to the directory containing additional source files. These files will be copied to the WRF repository before compilation. For example, if you want to replace the file `chem/chem_driver.F` before compilation, create a directory containing your version of this file (eg. `~/custom-src/chem/chem_driver.F.patch`) and use this option as `--sources=~/custom-src`. This option has no default value.
 
+ - `dry`: whether this is a dry run or not. In a dry run, this script does everything except actually running the compile script. The default value is `False`.
+
 > [!NOTE]
-> Boolean options (such as `scheduler`) can be specified as "yes", "y", "true", "t" (similarly for negative values). The values are not case-sensitive.
+> Boolean options (such as `scheduler` and `dry`) can be specified as "yes", "y", "true", "t" (similarly for negative values). The values are not case-sensitive.
 
 # Default values in JSON format
 

@@ -77,6 +77,12 @@ def prepare_argparser():
         help="Path to directory containing extra sources.",
         default=None,
     )
+    parser.add_argument(
+        "--dry",
+        help="Whether this is a dry run.",
+        action=cms.ConvertToBoolean,
+        default=False,
+    )
     return parser
 
 
@@ -344,6 +350,9 @@ process_patches(opts)
 process_extra_sources(opts)
 
 write_job_script(opts)
+
+if opts.dry:
+    sys.exit(0)
 
 if opts.scheduler:
     cmd = [dict(spirit="sbatch")[host], "compile.job"]
