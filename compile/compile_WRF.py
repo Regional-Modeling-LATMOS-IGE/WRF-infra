@@ -207,6 +207,7 @@ def prepare_environment_variables(opts):
     """
     host = cms.identify_host_platform()
     env_vars = dict(
+        NMM_CORE="0",
         NETCDF=dict(spirit="$NETCDF_FORTRAN_ROOT")[host],
         HDF5=dict(spirit="$HDF5_ROOT")[host],
     )
@@ -332,30 +333,22 @@ def process_extra_sources(opts):
         cms.run(["cp", "-v", src, path_in_repo])
 
 
-if __name__ != "__main__":
-    sys.exit(0)
+if __name__ == "__main__":
 
-host = cms.identify_host_platform()
-print("Host platform is: %s" % host)
+    host = cms.identify_host_platform()
+    opts = get_options()
 
-opts = get_options()
-print("Options:", opts)
+    clone_and_checkout(opts)
+    write_options(opts)
+    process_patches(opts)
+    process_extra_sources(opts)
+    write_job_script(opts)
 
-clone_and_checkout(opts)
+    if opts.dry:
+        sys.exit(0)
 
-write_options(opts)
-
-process_patches(opts)
-
-process_extra_sources(opts)
-
-write_job_script(opts)
-
-if opts.dry:
-    sys.exit(0)
-
-if opts.scheduler:
-    cmd = [dict(spirit="sbatch")[host], "compile.job"]
-else:
-    cmd = ["./compile.job"]
-cms.run(cmd, cwd=opts.destination)
+    if opts.scheduler:
+        cmd = [dict(spirit="sbatch")[host], "compile.job"]
+    else:
+        cmd = ["./compile.job"]
+    cms.run(cmd, cwd=opts.destination)
