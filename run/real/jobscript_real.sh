@@ -16,7 +16,6 @@ CASENAME_COMMENT='MOZARTMOSAIC'
 
 # Root directory with the compiled WRF executables (main/wrf.exe and main/real.exe)
 WRFDIR=~/WRF/src/WRF-Chem-Polar/WRFV4
-WRFVERSION='chem.develop'
 
 # Simulation start year and month
 yys=2012
@@ -87,7 +86,7 @@ cd "$SCRATCH" || exit
 echo " "
 echo "-------- $SLURM_JOB_NAME: Launch real.exe and preprocessors --------"
 echo "Running from $date_s to $date_e"
-echo "Running version real.exe.$WRFVERSION from $WRFDIR"
+echo "Running version real.exe from $WRFDIR"
 echo "Running on scratchdir $SCRATCH"
 echo "Writing output to $REALDIR"
 echo "Input files from WPS taken from $WPSDIR"
@@ -104,7 +103,7 @@ cd "$SCRATCH" || exit
 cp "$SLURM_SUBMIT_DIR/"* "$SCRATCH/"
 # Executables and WRF aux files from WRFDIR
 cp "$WRFDIR/run/"* "$SCRATCH/"
-cp "$WRFDIR/../executables/real.exe.$WRFVERSION" "$SCRATCH/real.exe" || exit
+cp "$WRFDIR/main/real.exe" "$SCRATCH/real.exe" || exit
 # met_em WPS files from WPSDIR
 cp "${WPSDIR}/met_em.d"* "$SCRATCH/" || exit
 
@@ -238,13 +237,12 @@ else
 fi
 tail fire_emis.out
 
-#---- Run the matlab anthro emission preprocessor (create wrfchemi* files)
+#---- Run the python anthro emission preprocessor (create wrfchemi* files)
 echo " "
 echo "-------- $SLURM_JOB_NAME: run emission script --------"
 echo " "
-module load matlab
-#TODO replace by CAMS or give choice
-matlab -nodisplay -singleCompThread -nodesktop -r "prep_anthro_emissions_mozartmosaic_eclipse_rcp(datenum($yys,$mms,$dds),datenum($yye,$mme,$dde));exit" > prep_anthro_emissions.out
+cp "$SLURM_SUBMIT_DIR/cams2wrfchem.py" "$SCRATCH/"
+python -u cams2wrfchem.py --start ${date_s} --end ${date_e} --domain 1
 
 #---- Initialize snow on sea ice
 echo " "

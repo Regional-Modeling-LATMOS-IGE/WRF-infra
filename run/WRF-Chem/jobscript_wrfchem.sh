@@ -12,12 +12,11 @@
 
 
 #-------- Input --------
-CASENAME='WRF_CHEM_TEST_MOZARTMOSAIC'
-CASENAME_COMMENT=''
+CASENAME='WRF_CHEM_TEST'
+CASENAME_COMMENT='MOZART_MOSAIC'
 
 # Root directory with the compiled WRF executables (main/wrf.exe and main/real.exe)
 WRFDIR=~/WRF/src/WRF-Chem-Polar/WRFV4
-WRFVERSION='chem.develop'
 
 # Simulation start year and month
 yys=2012
@@ -61,8 +60,13 @@ date_e="$yye-$mme-$dde"
 # Run id
 ID="$(date +"%Y%m%d").$SLURM_JOBID"
 
+# Case name for the output folder
+if [ -n "$CASENAME_COMMENT" ]; then
+  CASENAME_COMMENT="_${CASENAME_COMMENT}"
+fi
+
 # Directory containing real output (e.g. wrfinput_d01, wrfbdy_d01 files)
-REALDIR="${INDIR_ROOT}/real_${CASENAME}_$(date -d "$date_s" "+%Y")"
+REALDIR="${INDIR_ROOT}/real_${CASENAME}${CASENAME_COMMENT}_$(date -d "$date_s" "+%Y")"
 # Directory containing WRF-Chem output
 OUTDIR="${OUTDIR_ROOT}/DONE.${CASENAME}${CASENAME_COMMENT}.$ID"
 mkdir "$OUTDIR"
@@ -77,7 +81,7 @@ cd "$SCRATCH" || exit
 echo " "
 echo "-------- $SLURM_JOB_NAME --------"
 echo "Running from $date_s to $date_e"
-echo "Running version wrf.exe.$WRFVERSION from $WRFDIR"
+echo "Running version wrf.exe from $WRFDIR"
 echo "Running on scratchdir $SCRATCH"
 echo "Writing output to $OUTDIR"
 echo "Input files from real.exe taken from $REALDIR"
@@ -94,8 +98,7 @@ cd "$SCRATCH" || exit
 cp "$SLURM_SUBMIT_DIR/"* "$SCRATCH/"
 # Executables and WRF aux files from WRFDIR
 cp "$WRFDIR/run/"* "$SCRATCH/"
-# We run the version wrf.exe.$WRFVERSION in $WRFDIR/../executables
-cp "$WRFDIR/../executables/wrf.exe.$WRFVERSION" "$SCRATCH/wrf.exe"
+cp "$WRFDIR/main/wrf.exe" "$SCRATCH/wrf.exe"
 
 #  Copy and prepare the WRF namelist, set up run start and end dates
 cp "$SLURM_SUBMIT_DIR/${NAMELIST}" namelist.input
