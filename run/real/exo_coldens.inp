@@ -1,3 +1,4 @@
+! Adapted from https://github.com/NCAR/WRF-Chem-Preprocessing-Tools, license: Apache v2.0
 &control
 
 domains = 1,
