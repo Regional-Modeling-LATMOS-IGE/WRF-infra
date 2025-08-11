@@ -1,0 +1,40 @@
+! Copyright 2015 LATMOS (France, UMR 8190) and IGE (France, UMR 5001).
+!
+! Adapted from https://github.com/NCAR/WRF-Chem-Preprocessing-Tools
+! (copyright National Science Foundation (NSF),
+!            National Center for Atmospheric Research(NCAR), and
+!            Atmospheric Chemistry Observations and Modeling (ACOM) Laboratory)
+!
+! Licensed under the Apache License, Version 2.0 (the "License");
+! you may not use this file except in compliance with the License.
+! You may obtain a copy of the License at
+!
+! http://www.apache.org/licenses/LICENSE-2.0
+!
+! Unless required by applicable law or agreed to in writing, software
+! distributed under the License is distributed on an "AS IS" BASIS,
+! WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+! See the License for the specific language governing permissions and
+! limitations under the License.
+
+&control
+domains           = 1,
+fire_directory    = 'FIREEMIS_DIR',
+fire_filename(1)  = 'FIREEMIS_FILE',
+wrf_directory     = 'WRFRUNDIR',
+start_date        = 'SYEAR-SMONTH-SDAY',
+end_date          = 'EYEAR-EMONTH-EDAY',
+Model             = 'WRF',
+defaultUnits      = 'molecules/cm^2/s',
+FinnVers          = '1.5',
+
+wrf2fire_map = 'co -> CO', 'no -> NO', 'so2 -> SO2', 'bigalk -> BIGALK',
+               'bigene -> BIGENE', 'c2h4 -> C2H4', 'c2h5oh -> C2H5OH',
+               'c2h6 -> C2H6', 'c3h8 -> C3H8','c3h6 -> C3H6','ch2o -> CH2O', 'ch3cho -> CH3CHO',
+               'ch3coch3 -> CH3COCH3','ch3oh -> CH3OH','mek -> MEK','toluene -> TOLUENE',
+               'nh3 -> NH3','no2 -> NO2','open -> BIGALD','c10h16 -> C10H16',
+               'ch3cooh -> CH3COOH','cres -> CRESOL','glyald -> GLYALD','mgly -> CH3COCHO',
+               'gly -> CH3COCHO','acetol -> HYAC','isop -> ISOP','macr -> MACR'
+               'mvk -> MVK',
+               'oc -> 1.57*OC;aerosol', 'bc -> BC;aerosol', 'sulf -> -0.01*PM25 + 0.02*PM10;aerosol'
+/

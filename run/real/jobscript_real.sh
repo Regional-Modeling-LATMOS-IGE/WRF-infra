@@ -144,7 +144,9 @@ echo " "
 echo "-------- $SLURM_JOB_NAME: run megan_bio_emiss --------"
 echo " "
 # megan_bio_emiss often SIGSEGVs at the end but this is not an issue
-ln -s "$WRFCHEM_INPUT_DATA_DIR/bio_emissions/megan_bio_emiss/"*'.nc' .
+MEGANEMIS_DIR="$WRFCHEM_INPUT_DATA_DIR/bio_emissions/megan_bio_emiss"
+ln -s "${MEGANEMIS_DIR}/"*".nc" .
+sed -i "s:MEGANEMIS_DIR:${MEGANEMIS_DIR}:g" megan_bioemiss.inp
 sed -i "s:WRFRUNDIR:$PWD/:g" megan_bioemiss.inp
 if [ $mms -eq 1 ]; then
   sed -i "s:SMONTH:1:g" megan_bioemiss.inp
