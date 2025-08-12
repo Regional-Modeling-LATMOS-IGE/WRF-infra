@@ -1,0 +1,9 @@
+name: wrfinfra
+channels:
+ - conda-forge
+dependencies:
+ - python >=3.13,<3.14
+ - netcdf4
+ - xarray
+ - pyproj
+ - cartopy
