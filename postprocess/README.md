@@ -6,7 +6,7 @@
 import xarray as xr
 import wrfpp
 
-ds = xr.open_dataset("my-wrf-output.py")
+ds = xr.open_dataset("my-wrf-output.nc")
 
 # Convert from (lon, lat) to (x, y) using the
 # projection defined in the WRF output file
