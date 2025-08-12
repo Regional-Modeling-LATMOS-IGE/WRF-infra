@@ -4,6 +4,9 @@ channels:
 dependencies:
  - python >=3.13,<3.14
  - netcdf4
+ - numpy
+ - pandas
+ - shapely
  - xarray
  - pyproj
  - cartopy
