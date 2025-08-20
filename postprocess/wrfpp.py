@@ -294,14 +294,14 @@ class WRFDatasetAccessor(GenericDatasetAccessor):
             raise ValueError("Invalid value for attribute POLE_LAT.")
         proj = self.attrs["MAP_PROJ"]
         if proj == 1:
-            return self._crs_pyproj_lcc
+            crs = self._crs_pyproj_lcc
         elif proj == 2:
-            return self._crs_pyproj_polarstereo
-        elif proj in (0, 1, 102, 3, 4, 5, 6, 105, 203):
+            crs = self._crs_pyproj_polarstereo
+        elif proj in (0, 102, 3, 4, 5, 6, 105, 203):
             raise NotImplementedError("Projection code %d." % proj)
         else:
             raise ValueError("Invalid projection code: %d." % proj)
-        return getattr(self, "_crs_pyproj_%s" % proj)
+        return crs
 
     @property
     def _crs_pyproj_lcc(self):
