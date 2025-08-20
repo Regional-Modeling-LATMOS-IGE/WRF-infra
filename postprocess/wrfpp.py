@@ -366,7 +366,7 @@ class WRFDatasetAccessor(GenericDatasetAccessor):
             warnings.simplefilter("ignore")
             proj = crs_pyproj.to_dict()
         if proj["proj"] == "lcc":
-            return cartopy.crs.LambertConformal(
+            crs = cartopy.crs.LambertConformal(
                 central_longitude=proj["lon_0"],
                 central_latitude=proj["lat_0"],
                 false_easting=proj["x_0"],
@@ -375,7 +375,7 @@ class WRFDatasetAccessor(GenericDatasetAccessor):
                 globe=cartopy.crs.Globe(datum=proj["datum"]),
             )
         elif proj["proj"] == "stere":
-            return cartopy.crs.Stereographic(
+            crs = cartopy.crs.Stereographic(
                 central_longitude=proj["lon_0"],
                 central_latitude=proj["lat_0"],
                 false_easting=proj["x_0"],
@@ -385,3 +385,4 @@ class WRFDatasetAccessor(GenericDatasetAccessor):
             )
         else:
             raise ValueError("Unsupported projection: %s." % proj["proj"])
+        return crs
