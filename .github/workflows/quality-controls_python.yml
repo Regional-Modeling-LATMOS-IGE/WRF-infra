@@ -1,5 +1,5 @@
-name: quality controls for Python code
-run-name: run quality controls for Python code
+name: Quality controls for Python code
+run-name: Run quality controls for Python code
 on: [push, workflow_dispatch]
 jobs:
   Run-Quality-Controls:
@@ -19,5 +19,6 @@ jobs:
           pip install pycodestyle ruff
       - name: Run linters
         run: |
-          ruff check  --diff ${{ github.workspace }}/postprocess/wrfpp.py
-          ruff format --diff ${{ github.workspace }}/postprocess/wrfpp.py
+          pycodestyle --config=pyproject.toml ${{ github.workspace }}/postprocess
+          ruff check  --diff ${{ github.workspace }}/postprocess
+          ruff format --diff ${{ github.workspace }}/postprocess
