@@ -19,5 +19,5 @@ jobs:
           pip install pycodestyle ruff
       - name: Run linters
         run: |
-          ruff check  --diff --color ${{ github.workspace }}/postprocess/wrfpp.py
-          ruff format --diff --color ${{ github.workspace }}/postprocess/wrfpp.py
+          ruff check  --diff ${{ github.workspace }}/postprocess/wrfpp.py
+          ruff format --diff ${{ github.workspace }}/postprocess/wrfpp.py
