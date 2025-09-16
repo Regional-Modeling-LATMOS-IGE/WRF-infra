@@ -12,4 +12,4 @@ line-length=79
 # with the way Ruff formats slices (eg s[n + 1 :] -- because Ruff treats colon
 # in slices as binary operators, so adds a space between it and the
 # operand(s)). We therefore ignore this rule here.
-ignore = E203
+ignore="E203"
