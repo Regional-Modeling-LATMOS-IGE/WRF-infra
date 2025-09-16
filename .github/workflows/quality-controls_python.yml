@@ -1,0 +1,23 @@
+name: quality controls for Python code
+run-name: run quality controls for Python code
+on: [push, workflow_dispatch]
+jobs:
+  Run-Quality-Controls:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clone repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Prepare Python environment
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - name: Install required Python packages
+        run: |
+          python -m pip install --upgrade pip
+          pip install pycodestyle ruff
+      - name: Run linters
+        run: |
+          ruff check  --diff --color ${{ github.workspace }}/postprocess/wrfpp.py
+          ruff format --diff --color ${{ github.workspace }}/postprocess/wrfpp.py
