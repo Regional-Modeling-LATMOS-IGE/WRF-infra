@@ -311,8 +311,6 @@ class WRFDatasetAccessor(GenericDatasetAccessor):
         projections.
 
         """
-        if self.attrs["MAP_PROJ"] != 1:
-            raise ValueError("Invalid value for MAP_PROJ.")
         proj_name = "Lambert Conformal Conic"
         map_proj_char = self.attrs.get("MAP_PROJ_CHAR", proj_name)
         if map_proj_char != proj_name:
@@ -338,8 +336,6 @@ class WRFDatasetAccessor(GenericDatasetAccessor):
         projections.
 
         """
-        if self.attrs["MAP_PROJ"] != 2:
-            raise ValueError("Invalid value for MAP_PROJ.")
         proj_name = "Polar Stereographic"
         map_proj_char = self.attrs.get("MAP_PROJ_CHAR", proj_name)
         if map_proj_char != proj_name:
