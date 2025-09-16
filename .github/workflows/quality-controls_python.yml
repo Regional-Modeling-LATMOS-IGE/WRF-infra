@@ -2,6 +2,8 @@ name: Quality controls for Python code
 run-name: Run quality controls for Python code
 on:
   workflow_dispatch:
+    branches:
+      - '**'
   pull_request:
     paths:
       - '**.py'
