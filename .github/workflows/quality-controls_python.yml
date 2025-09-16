@@ -1,6 +1,10 @@
 name: Quality controls for Python code
 run-name: Run quality controls for Python code
-on: [push, workflow_dispatch]
+on:
+  workflow_dispatch:
+  pull_requests:
+    paths:
+      - '**.py'
 jobs:
   Run-Quality-Controls:
     runs-on: ubuntu-latest
@@ -17,7 +21,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install pycodestyle ruff
-      - name: Run linters
+      - name: Run checkers and linters
         run: |
           pycodestyle ${{ github.workspace }}/postprocess
           ruff check  --diff ${{ github.workspace }}/postprocess
