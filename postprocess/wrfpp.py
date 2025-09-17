@@ -85,7 +85,7 @@ class GenericDatasetAccessor(ABC):
     def __init__(self, dataset):
         self._dataset = dataset
 
-    ## What is below emulates the interface of xarray datasets
+    # What is below emulates the interface of xarray datasets
 
     def __getitem__(self, *args, **kwargs):
         return self._dataset.__getitem__(*args, **kwargs)
@@ -105,7 +105,7 @@ class GenericDatasetAccessor(ABC):
     def close(self, *args, **kwargs):
         return self._dataset.close(*args, **kwargs)
 
-    ## What is below adds new functionality
+    # What is below adds new functionality
 
     def units(self, varname):
         """Return units of given variable.
