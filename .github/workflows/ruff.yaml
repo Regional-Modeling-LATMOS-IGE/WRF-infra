@@ -2,8 +2,7 @@
 #
 # License: BSD 3-clause "new" or "revised" license (BSD-3-Clause).
 
-name: Quality controls for Python code
-run-name: Run quality controls for Python code
+name: Ruff
 on:
   workflow_dispatch:
   pull_request:
@@ -17,17 +16,12 @@ jobs:
         uses: actions/checkout@v4
         with:
           persist-credentials: false
-      - name: Uname
-        run: |
-          uname -a
       - name: Prepare Ruff
         uses: astral-sh/ruff-action@v3
         with:
+          version: "latest"
           args: "--version"
-      - name: Which ruff
-        run: |
-          which ruff
-      - name: Run Ruff
-        run: |
-          ruff check  --diff ${{ github.workspace }}/postprocess
-          ruff format --diff ${{ github.workspace }}/postprocess
+      - name: Run Ruff (check)
+        run: ruff check --diff ${{ github.workspace }}/postprocess
+      - name: Run Ruff (format)
+        run: ruff format --diff ${{ github.workspace }}/postprocess
