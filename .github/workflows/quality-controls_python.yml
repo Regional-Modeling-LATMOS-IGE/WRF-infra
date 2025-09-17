@@ -24,9 +24,8 @@ jobs:
       - name: Install required Python packages
         run: |
           python -m pip install --upgrade pip
-          pip install pycodestyle ruff
+          pip install ruff
       - name: Run checkers and linters
         run: |
-          pycodestyle ${{ github.workspace }}/postprocess
           ruff check  --diff ${{ github.workspace }}/postprocess
           ruff format --diff ${{ github.workspace }}/postprocess
