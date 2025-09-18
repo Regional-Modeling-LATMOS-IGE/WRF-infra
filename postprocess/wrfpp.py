@@ -463,7 +463,7 @@ class WRFPotentialTemperature(DerivedVariable):
         Return
         ------
         xarray.DataArray
-            The potential temperature for given slice.
+            The potential temperature for given slice, in K.
 
         """
         varname, expected_units = "T", "K"
@@ -490,7 +490,7 @@ class WRFAtmPressure(DerivedVariable):
         Return
         ------
         xarray.DataArray
-            The atmospheric pressure for given slice.
+            The atmospheric pressure for given slice, in Pa.
 
         """
         varname_p, varname_pb, expected_units = "P", "PB", "Pa"
@@ -518,7 +518,7 @@ class WRFAirTemperature(DerivedVariable):
         Return
         ------
         xarray.DataArray
-            The air temperature for given slice.
+            The air temperature for given slice, in K.
 
         """
         wrf = self._dataset.wrf
