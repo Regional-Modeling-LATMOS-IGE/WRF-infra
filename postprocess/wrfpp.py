@@ -19,8 +19,14 @@ try:
 except ImportError:
     pass
 
+# The following constants that are marked with ** use the same values as in
+# the WRF model code (WRF/share/module_model_constants.F). We use SI units for
+# all constants
 constants = dict(
-    pot_temp_ref=300,  # Reference potential temperature (K)
+    pot_temp_t0=300,  # Base state potential temperature (K)**
+    pot_temp_p0=1e5,  # Base state surface pressure for potential temp. (Pa)**
+    r_air=287,  # Specific gas constant of dry air (J kg-1 K-1)**
+    cp_air=1004.5,  # Heat cap. of dry air at constant pressure (J kg-1 K-1)**
 )
 
 
@@ -398,6 +404,16 @@ class WRFDatasetAccessor(GenericDatasetAccessor):
         """The DerivedVariable object to calculate potential temperature."""
         return WRFPotentialTemperature(self._dataset)
 
+    @property
+    def atm_pressure(self):
+        """The DerivedVariable object to calculate atmopsheric pressure."""
+        return WRFAtmPressure(self._dataset)
+
+    @property
+    def air_temperature(self):
+        """The DerivedVariable object to calculate air temperature."""
+        return WRFAirTemperature(self._dataset)
+
 
 class DerivedVariable(ABC):
     """Abstract class to define derived variables.
@@ -419,15 +435,15 @@ class DerivedVariable(ABC):
         Parameters
         ----------
         *args: slice
-            Slice of data of interest in the WRF output. For example, if the
-            variable of interest is 4-dimensional, use [:10, 0, :, :] to
-            calculate its value for the first ten time steps, the first
-            vertical layer, and the entire horizontal grid.
+            Slice of interest in the WRF output. For example, if the variable
+            of interest is 4-dimensional, use [:10, 0, :, :] to calculate its
+            value for the first ten time steps, the first vertical layer, and
+            the entire horizontal grid.
 
         Return
         ------
         xarray.DataArray
-            The sliced derived variable.
+            The derived variable for given slice.
 
         """
         pass
@@ -442,19 +458,75 @@ class WRFPotentialTemperature(DerivedVariable):
         Parameters
         ----------
         *args: slice
-            Slice of data of interest in the WRF output.
+            Slice of interest in the WRF output.
 
         Return
         ------
         xarray.DataArray
-            The sliced potential temperature.
+            The potential temperature for given slice.
 
         """
         varname, expected_units = "T", "K"
         self._dataset.wrf.check_units(varname, expected_units)
-        pot_temp_ref = constants["pot_temp_ref"]
+        pot_temp_t0 = constants["pot_temp_t0"]
         return xr.DataArray(
-            pot_temp_ref + self._dataset[varname].__getitem__(*args),
+            pot_temp_t0 + self._dataset[varname].__getitem__(*args),
             name="potential temperature",
             attrs=dict(long_name="Potential temperature", units="K"),
+        )
+
+
+class WRFAtmPressure(DerivedVariable):
+    """Derived variable for atmospheric pressure from WRF outputs."""
+
+    def __getitem__(self, *args):
+        """Return the atmospheric pressure.
+
+        Parameters
+        ----------
+        *args: slice
+            Slice of interest in the WRF output.
+
+        Return
+        ------
+        xarray.DataArray
+            The atmospheric pressure for given slice.
+
+        """
+        varname_p, varname_pb, expected_units = "P", "PB", "Pa"
+        self._dataset.wrf.check_units(varname_p, expected_units)
+        self._dataset.wrf.check_units(varname_pb, expected_units)
+        return xr.DataArray(
+            self._dataset[varname_p].__getitem__(*args)
+            + self._dataset[varname_pb].__getitem__(*args),
+            name="atmospheric pressure",
+            attrs=dict(long_name="Atmospheric pressure", units="Pa"),
+        )
+
+
+class WRFAirTemperature(DerivedVariable):
+    """Derived variable for air temperature from WRF outputs."""
+
+    def __getitem__(self, *args):
+        """Return the air temperature.
+
+        Parameters
+        ----------
+        *args: slice
+            Slice of interest in the WRF output.
+
+        Return
+        ------
+        xarray.DataArray
+            The air temperature for given slice.
+
+        """
+        wrf = self._dataset.wrf
+        pot_temp = wrf.potential_temperature.__getitem__(*args)
+        pressure = wrf.atm_pressure.__getitem__(*args)
+        exponent = constants["r_air"] / constants["cp_air"]
+        return xr.DataArray(
+            pot_temp * (pressure / constants["pot_temp_p0"]) ** exponent,
+            name="air temperature",
+            attrs=dict(long_name="Air temperature", units="K"),
         )
