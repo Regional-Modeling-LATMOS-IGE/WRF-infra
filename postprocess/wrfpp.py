@@ -448,6 +448,17 @@ class DerivedVariable(ABC):
         """
         pass
 
+    def __str__(self):
+        """String representation of the DataArray of the derived variable.
+
+        Warnings
+        --------
+        Calling this function will calculate the entire array of the derived
+        variable. This is inefficient for large data sets.
+
+        """
+        return self[:].__str__()
+
 
 class WRFPotentialTemperature(DerivedVariable):
     """Derived variable for potential temperature from WRF outputs."""
