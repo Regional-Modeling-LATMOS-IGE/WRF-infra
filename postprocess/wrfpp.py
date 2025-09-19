@@ -453,7 +453,7 @@ class DerivedVariable(ABC):
 
         Warnings
         --------
-        Calling this function will calculate the entire array of the derived
+        Calling this method will calculate the entire array of the derived
         variable. This is inefficient for large data sets.
 
         """
