@@ -453,8 +453,10 @@ class DerivedVariable(ABC):
 
         Warnings
         --------
-        Calling this method will calculate the entire array of the derived
-        variable. This is inefficient for large data sets.
+        If the dataset has been opened without activating dask, calling this
+        method will calculate the entire array of the derived variable. This is
+        inefficient for large data sets. This is not a problem if dask is
+        activated because lazy loading will be used in this case.
 
         """
         return self[:].__str__()
