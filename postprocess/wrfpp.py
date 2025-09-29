@@ -551,7 +551,7 @@ class WRFAirTemperature(DerivedVariable):
 
 
 class WRFDensityOfDryAir(DerivedVariable):
-    """Derived variable for air density from WRF outputs."""
+    """Derived variable for dry air density from WRF outputs."""
 
     def __getitem__(self, *args):
         """Return the density of dry air.
@@ -564,7 +564,7 @@ class WRFDensityOfDryAir(DerivedVariable):
         Return
         ------
         xarray.DataArray
-            The air density for given slice, in kg m-3.
+            The dry air density for given slice, in kg m-3.
 
         """
         wrf = self._dataset.wrf
@@ -572,6 +572,6 @@ class WRFDensityOfDryAir(DerivedVariable):
         air_temp = wrf.air_temperature.__getitem__(*args)
         return xr.DataArray(
             pressure / (constants["r_air"] * air_temp),
-            name="air density",
+            name="dry air density",
             attrs=dict(long_name="Dry air density", units="kg m-3"),
         )
