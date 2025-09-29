@@ -415,6 +415,12 @@ class WRFDatasetAccessor(GenericDatasetAccessor):
         return WRFAirTemperature(self._dataset)
 
 
+    @property
+    def accumulated_preciptation(self):
+        """The DerivedVariable object to calculate accumulated total preciptation."""
+        return WRFAccumulatedPreciptation(self._dataset)
+
+
 class DerivedVariable(ABC):
     """Abstract class to define derived variables.
 
@@ -542,4 +548,34 @@ class WRFAirTemperature(DerivedVariable):
             pot_temp * (pressure / constants["pot_temp_p0"]) ** exponent,
             name="air temperature",
             attrs=dict(long_name="Air temperature", units="K"),
+        )
+
+
+class WRFAccumulatedPreciptation(DerivedVariable):
+    """Derived variable for accumulated total preciptation from WRF outputs."""
+
+    def __getitem__(self, *args):
+        """Return the accumulated total preciptation.
+
+        Parameters
+        ----------
+        *args: slice
+            Slice of interest in the WRF output.
+
+        Return
+        ------
+        xarray.DataArray
+            The accumulated total preciptation for given slice, in mm.
+
+        """
+        wrf = self._dataset.wrf
+        wrf.check_units("RAINNC", "mm")
+        wrf.check_units("RAINC", "mm")
+        rainnc = wrf["RAINNC"].__getitem__(*args)
+        rainc = wrf["RAINC"].__getitem__(*args)
+        precip = rainnc + rainc
+        return xr.DataArray(
+            precip
+            name="accumulated total preciptation",
+            attrs=dict(long_name="Accumulated total preciptation", units="mm"),
         )
