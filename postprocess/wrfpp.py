@@ -416,9 +416,9 @@ class WRFDatasetAccessor(GenericDatasetAccessor):
 
 
     @property
-    def accumulated_preciptation(self):
-        """The DerivedVariable object to calculate accumulated total preciptation."""
-        return WRFAccumulatedPreciptation(self._dataset)
+    def accumulated_precipitation(self):
+        """The DerivedVariable object to calculate accumulated total precipitation."""
+        return WRFAccumulatedPrecipitation(self._dataset)
 
 
 class DerivedVariable(ABC):
@@ -551,11 +551,11 @@ class WRFAirTemperature(DerivedVariable):
         )
 
 
-class WRFAccumulatedPreciptation(DerivedVariable):
-    """Derived variable for accumulated total preciptation from WRF outputs."""
+class WRFAccumulatedPrecipitation(DerivedVariable):
+    """Derived variable for accumulated total precipitation from WRF outputs."""
 
     def __getitem__(self, *args):
-        """Return the accumulated total preciptation.
+        """Return the accumulated total precipitation.
 
         Parameters
         ----------
@@ -565,7 +565,7 @@ class WRFAccumulatedPreciptation(DerivedVariable):
         Return
         ------
         xarray.DataArray
-            The accumulated total preciptation for given slice, in mm.
+            The accumulated total precipitation for given slice, in mm.
 
         """
         wrf = self._dataset.wrf
@@ -575,7 +575,7 @@ class WRFAccumulatedPreciptation(DerivedVariable):
         rainc = wrf["RAINC"].__getitem__(*args)
         precip = rainnc + rainc
         return xr.DataArray(
-            precip
-            name="accumulated total preciptation",
-            attrs=dict(long_name="Accumulated total preciptation", units="mm"),
+            precip,
+            name="accumulated total precipitation",
+            attrs=dict(long_name="Accumulated total precipitation", units="mm"),
         )
