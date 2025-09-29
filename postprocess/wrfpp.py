@@ -414,7 +414,6 @@ class WRFDatasetAccessor(GenericDatasetAccessor):
         """The DerivedVariable object to calculate air temperature."""
         return WRFAirTemperature(self._dataset)
 
-
     @property
     def accumulated_precipitation(self):
         """The DerivedVariable object to calculate accumulated total precipitation."""
@@ -577,5 +576,7 @@ class WRFAccumulatedPrecipitation(DerivedVariable):
         return xr.DataArray(
             precip,
             name="accumulated total precipitation",
-            attrs=dict(long_name="Accumulated total precipitation", units="mm"),
+            attrs=dict(
+                long_name="Accumulated total precipitation", units="mm"
+            ),
         )
