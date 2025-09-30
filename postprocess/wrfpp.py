@@ -581,6 +581,7 @@ class WRFDensityOfDryAir(DerivedVariable):
             attrs=dict(long_name="Dry air density", units="kg m-3"),
         )
 
+
 class WRFAccumulatedPrecipitation(DerivedVariable):
     """Derived variable for accumulated total precipitation from WRF outputs."""
 
