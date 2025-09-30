@@ -34,6 +34,10 @@ Once your job has completed, check your slurm output log file (`run/WPS/slurm_<j
 for geogrid, ungrib and metgrid if it was successful. You can also check your `$OUTPUT_DIR`, where you should now be able to find `met_em` files for the dates of your simulation.
 
 ## Run real
+
+> [!WARNING]  
+> The jobscripts expect to find your WPS output at the path defined as `WPSDIR` in `jobscript_real.sh`, so make sure that `WPSDIR` in `joscript_real.sh` is the same as `OUTDIR` in `jobscript_wps.sh`.
+
 From the root of WRF-infra:
 ```
 cd run/real/
