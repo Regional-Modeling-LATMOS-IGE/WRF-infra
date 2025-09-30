@@ -673,7 +673,7 @@ class WRFRelativeHumidity(DerivedVariable):
         wrf = self._dataset.wrf
         varname, expected_units = "QVAPOR", "kg kg-1"
         wrf.check_units(varname, expected_units)
-        qv = wrf[varname].__getitem__(*args)
+        q = wrf[varname].__getitem__(*args)
 
         # Calculate the saturation water vapor pressure (in Pa)
         temperature = wrf.air_temperature.__getitem__(*args) - 273.15
@@ -681,11 +681,11 @@ class WRFRelativeHumidity(DerivedVariable):
 
         # Calculate the saturation water vapor mixing ratio
         pressure = wrf.atm_pressure.__getitem__(*args)
-        qvsat = pressure_to_massfrac(psat, pressure, constants["mm_water"])
+        qsat = pressure_to_massfrac(psat, pressure, constants["mm_water"])
 
         # Calculate and return the relative humidity
         return xr.DataArray(
-            100 * qv / qvsat,
+            100 * q / qsat,
             name="relative humidity",
             attrs=dict(long_name="Relative humidity", units="%"),
         )
