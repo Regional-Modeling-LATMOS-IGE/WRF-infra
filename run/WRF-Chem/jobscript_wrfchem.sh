@@ -34,7 +34,7 @@ NAMELIST="namelist.input.YYYY"
 
 #-------- Parameters --------
 # Root directory for WRF input/output
-OUTDIR_ROOT="/data/marelle/marelle/WRF/WRF_OUTPUT"
+OUTDIR_ROOT="/data/$(whoami)/WRF/WRF_OUTPUT"
 SCRATCH_ROOT="/scratchu/$(whoami)"
 INDIR_ROOT="$OUTDIR_ROOT"
 # WRF-Chem input data directory

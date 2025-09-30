@@ -44,7 +44,7 @@ USE_CHLA_DMS_WPS=true
 #-------- Parameters --------
 # Root directory for WPS input/output
 # Change this to your own /data or /proju directory
-OUTDIR_ROOT="/data/marelle/marelle/WRF/WRF_OUTPUT"
+OUTDIR_ROOT="/data/$(whoami)/WRF/WRF_OUTPUT"
 SCRATCH_ROOT="/scratchu/$(whoami)"
 
 # Directory containing the GRIB file inputs for ungrib
