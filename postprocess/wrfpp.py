@@ -415,6 +415,11 @@ class WRFDatasetAccessor(GenericDatasetAccessor):
         return WRFAirTemperature(self._dataset)
 
     @property
+    def density_of_dry_air(self):
+        """The DerivedVariable object to calculate dry air density."""
+        return WRFDensityOfDryAir(self._dataset)
+
+    @property
     def accumulated_precipitation(self):
         """The DerivedVariable object to calculate accumulated total precipitation."""
         return WRFAccumulatedPrecipitation(self._dataset)
@@ -547,6 +552,33 @@ class WRFAirTemperature(DerivedVariable):
             pot_temp * (pressure / constants["pot_temp_p0"]) ** exponent,
             name="air temperature",
             attrs=dict(long_name="Air temperature", units="K"),
+        )
+
+
+class WRFDensityOfDryAir(DerivedVariable):
+    """Derived variable for dry air density from WRF outputs."""
+
+    def __getitem__(self, *args):
+        """Return the density of dry air.
+
+        Parameters
+        ----------
+        *args: slice
+            Slice of interest in the WRF output.
+
+        Return
+        ------
+        xarray.DataArray
+            The dry air density for given slice, in kg m-3.
+
+        """
+        wrf = self._dataset.wrf
+        pressure = wrf.atm_pressure.__getitem__(*args)
+        air_temp = wrf.air_temperature.__getitem__(*args)
+        return xr.DataArray(
+            pressure / (constants["r_air"] * air_temp),
+            name="dry air density",
+            attrs=dict(long_name="Dry air density", units="kg m-3"),
         )
 
 
