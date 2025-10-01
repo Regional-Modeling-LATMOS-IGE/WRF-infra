@@ -81,6 +81,22 @@ def process_path(path):
         return os.path.abspath(os.path.expanduser(path))
 
 
+@functools.lru_cache
+def path_of_repo():
+    """Return the path to the root of the repository that contains this file.
+
+    Returns
+    -------
+    str
+        The path to the root of the repository that contains this file.
+
+    """
+    path = os.path.dirname(__file__)
+    if path == "":
+        path = "."
+    return process_path(os.path.join(path, ".."))
+
+
 def repo_is_local(repository):
     """Return whether given repository address is local.
 
