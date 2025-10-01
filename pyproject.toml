@@ -1,7 +1,20 @@
+[project]
+
+requires-python = ">= 3.13"
+dependencies = [
+    "numpy",
+]
+
+[project.optional-dependencies]
+
+wrfpp = [
+    "cartopy",
+]
+
 [tool.black]
 
-line-length=79
+line-length = 79
 
 [tool.ruff]
 
-line-length=79
+line-length = 79
