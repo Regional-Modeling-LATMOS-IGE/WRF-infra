@@ -104,32 +104,6 @@ def _units_mpl(units):
     return " ".join(split)
 
 
-def pressure_to_massfrac(partial_pressure, total_pressure, molar_mass):
-    """Calculate the mass fraction of a gaseous species.
-
-    Parameters
-    ----------
-    partial_pressure: scalar or array (numpy, xarray, ...)
-        The partial pressure of the species, same units as total_pressure.
-    total_pressure: scalar or array (numpy, xarray, ...)
-        The total air pressure, same units as partial_pressure.
-    molar_mass:
-        The molar mass of the species, in kg mol-1.
-
-    Returns
-    -------
-    xr.DataArray
-        The mass fraction of the gaseous species (dimensionless).
-
-    """
-    r = molar_mass / constants["mm_dryair"]
-    return xr.DataArray(
-        r * partial_pressure / (total_pressure - partial_pressure * (1 - r)),
-        name="mass fraction",
-        attrs=dict(long_name="Mass fraction", units=None),
-    )
-
-
 class GenericDatasetAccessor(ABC):
     """Template for xarray dataset accessors.
 
@@ -666,7 +640,7 @@ class WRFRelativeHumidity(DerivedVariable):
         Notes
         -----
         We use the same equation to calculate the saturation vapor pressure as
-        in the WRF model.
+        in the WRF model (eg. WRF/main/tc_em.F, subroutine qvtorh).
 
         """
         # Get the water vapor mixing ratio
@@ -681,7 +655,8 @@ class WRFRelativeHumidity(DerivedVariable):
 
         # Calculate the saturation water vapor mixing ratio
         pressure = wrf.atm_pressure.__getitem__(*args)
-        qsat = pressure_to_massfrac(psat, pressure, constants["mm_water"])
+        r = constants["mm_water"] / constants["mm_dryair"]
+        qsat = r * psat / (pressure - psat * (1 - r))
 
         # Calculate and return the relative humidity
         return xr.DataArray(
