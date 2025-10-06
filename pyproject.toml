@@ -10,6 +10,9 @@ dependencies = [
 wrfpp = [
     "cartopy",
 ]
+dev = [
+    "ruff"
+]
 
 [tool.black]
 

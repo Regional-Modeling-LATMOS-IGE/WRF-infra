@@ -10,30 +10,40 @@ repository's pyproject.toml file.
 
 """
 
+import os
 import argparse
-import os.path
 import tomllib
 import commons
 
 # Command-line arguments
+
+# Default values
+host = commons.identify_host_platform()
+env_name = "WRF-Chem-Polar"
+env_root_prefix = "~/conda-envs"
+conda = "micromamba"
+if host == "spirit":
+    env_root_prefix = "/proju/wrf-chem/software/conda-envs/shared"
+    conda = "/proju/wrf-chem/software/micromamba/micromamba"
 
 parser = argparse.ArgumentParser(
     description="Install the environment to compile and run WRF-Chem-Polar.",
     formatter_class=argparse.RawDescriptionHelpFormatter,
 )
 parser.add_argument(
-    "--destination",
-    help=(
-        "Directory that will host the environment. For security reasons, this"
-        "directory will not be removed by this script. This script will stop "
-        "prematurely if the destination directory already exists. "
-    ),
-    default="~/conda-environments/env_WRF-Chem-Polar",
+    "--env-root-prefix",
+    help="Location of the root directory for conda environments.",
+    default=env_root_prefix,
+)
+parser.add_argument(
+    "--env-name",
+    help="Name of the conda environment.",
+    default=env_name,
 )
 parser.add_argument(
     "--conda",
     help="The conda-like program to use.",
-    default="micromamba",
+    default=conda,
 )
 parser.add_argument(
     "--optional-dependencies",
@@ -43,17 +53,26 @@ parser.add_argument(
     ),
     default="",
 )
+parser.add_argument(
+    "--find",
+    help="Path to the find command.",
+    default="/usr/bin/find",
+)
+parser.add_argument(
+    "--chmod",
+    help="Path to the chmod command.",
+    default="/usr/bin/chmod",
+)
 args = parser.parse_args()
 
-# Location where the environment will be installed
+# We refuse to overwrite an existing environment
 
-destination = commons.process_path(args.destination)
-if os.path.lexists(destination):
+env_dir = os.path.join(args.env_root_prefix, "envs", args.env_name)
+if os.path.lexists(commons.process_path(env_dir)):
     raise RuntimeError(
-        "The destination directory alreay exists. "
+        "The destination directory already exists. "
         "Please remove it manually and re-run this script."
     )
-dir_envs, env_name = os.path.split(destination)
 
 # Parse the pyproject.toml file
 
@@ -71,9 +90,9 @@ cmd = [
     "--no-rc",
     "--no-env",
     "--root-prefix",
-    dir_envs,
+    args.env_root_prefix,
     "--name",
-    env_name,
+    args.env_name,
     "--channel",
     "conda-forge",
     "--override-channels",
@@ -94,3 +113,19 @@ for group in [g.strip() for g in args.optional_dependencies.split(",")]:
     cmd += deps
 
 commons.run(cmd)
+
+# Fix permissions:
+#  - Give group members read and execute acces.
+#  - Give no rights to non-group members.
+
+run_kwargs = dict(cwd=args.env_root_prefix)
+all_dirs = commons.run_stdout([args.find, "-type", "d"], **run_kwargs)
+all_files = commons.run_stdout([args.find, "-type", "f"], **run_kwargs)
+exec_files = commons.run_stdout(
+    [args.find, "-type", "f", "-perm", "-u=x"], **run_kwargs
+)
+nonexec_files = [f for f in all_files if f not in exec_files]
+
+commons.run([args.chmod, "440"] + nonexec_files, **run_kwargs)
+commons.run([args.chmod, "550"] + exec_files, **run_kwargs)
+commons.run([args.chmod, "550"] + all_dirs, **run_kwargs)
