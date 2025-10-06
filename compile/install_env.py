@@ -115,17 +115,45 @@ for group in [g.strip() for g in args.optional_dependencies.split(",")]:
 commons.run(cmd)
 
 # Fix permissions:
-#  - Give group members read and execute acces.
-#  - Give no rights to non-group members.
+#  - To current user and group members: read and execute acces.
+#  - To others: no rights.
 
-run_kwargs = dict(cwd=args.env_root_prefix)
-all_dirs = commons.run_stdout([args.find, "-type", "d"], **run_kwargs)
-all_files = commons.run_stdout([args.find, "-type", "f"], **run_kwargs)
-exec_files = commons.run_stdout(
-    [args.find, "-type", "f", "-perm", "-u=x"], **run_kwargs
+
+def exec_chmod(chmod, perm):
+    """Return the piece of command to run chmod with "find ... -exec ...".
+
+    Parameters
+    ----------
+    chmod: str
+        The chmod command to use.
+    perm: str
+        The permissions to give (eg. "550", "u+x", etc.).
+
+    Returns
+    -------
+    list
+        The end of the find command, starting at "-exec", as a list of
+        arguments.
+
+    """
+    return ["-exec", args.chmod, perm, "{}", ";"]
+
+
+# Executable files
+commons.run_stdout(
+    [args.find, "-type", "f", "-perm", "-u=x"] + exec_chmod(args.chmod, "550"),
+    cwd=args.env_root_prefix,
 )
-nonexec_files = [f for f in all_files if f not in exec_files]
 
-commons.run([args.chmod, "440"] + nonexec_files, **run_kwargs)
-commons.run([args.chmod, "550"] + exec_files, **run_kwargs)
-commons.run([args.chmod, "550"] + all_dirs, **run_kwargs)
+# Non-executable files
+commons.run_stdout(
+    [args.find, "-type", "f", "!", "-perm", "550"]
+    + exec_chmod(args.chmod, "440"),
+    cwd=args.env_root_prefix,
+)
+
+# Directories
+commons.run_stdout(
+    [args.find, "-type", "d"] + exec_chmod(args.chmod, "550"),
+    cwd=args.env_root_prefix,
+)
