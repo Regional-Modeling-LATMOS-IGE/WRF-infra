@@ -2,8 +2,6 @@
 
 This tutorial explains the steps to run an example simulation of WRF-Chem-Polar using the scripts in this repo. It's assumed that users have already [installed the model](https://github.com/Regional-Modeling-LATMOS-IGE/WRF-infra/blob/issue04/add-docs/doc/tutorials/01-install-wrf-chem-polar.md), and obtained and pre-processed all external data inputs before completing this tutorial.
 
-> [!WARNING]  
-> The output of WPS, real, and WRF will be saved in directories created from `$OUTDIR_ROOT` and `$SCRATCH_ROOT`, defined in `run/XXX/jobscript_XXX.sh`. Before launching any jobs, make sure that these parameters are definitely pointing to your own storage space in order to avoid overwriting other users' data.
 
 ## Download the repo
 ```
