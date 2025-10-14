@@ -12,6 +12,7 @@ repository's pyproject.toml file.
 
 import os
 import argparse
+import datetime
 import tomllib
 import commons
 
@@ -19,7 +20,7 @@ import commons
 
 # Default values
 host = commons.identify_host_platform()
-env_name = "WRF-Chem-Polar"
+env_name = "WRF-Chem-Polar_" + datetime.datetime.today().strftime("%Y-%m-%d")
 env_root_prefix = "~/conda-envs"
 conda = "micromamba"
 if host == "spirit":
@@ -103,7 +104,11 @@ cmd = [
 
 # Add optional dependencies
 known_groups = pyproject["project"]["optional-dependencies"]
-for group in [g.strip() for g in args.optional_dependencies.split(",")]:
+if args.optional_dependencies.strip() == "*":
+    groups = known_groups.keys()
+else:
+    groups = [g.strip() for g in args.optional_dependencies.split(",")]
+for group in groups:
     if group == "":
         continue
     try:

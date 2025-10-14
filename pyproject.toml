@@ -2,12 +2,23 @@
 
 requires-python = ">= 3.13"
 dependencies = [
-    "numpy",
+    "gfortran",
+    "openmpi",
+    "netcdf-fortran",
 ]
 
 [project.optional-dependencies]
 
+preprocess = [
+    "pyproj",
+    "netcdf4",
+    "xarray",
+    "shapely",
+]
 wrfpp = [
+    "pyproj",
+    "netcdf4",
+    "xarray",
     "cartopy",
 ]
 dev = [
