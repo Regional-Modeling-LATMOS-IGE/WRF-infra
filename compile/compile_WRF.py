@@ -8,162 +8,7 @@ License: BSD 3-clause "new" or "revised" license (BSD-3-Clause).
 
 import sys
 import os.path
-import argparse
-import json
 import commons as cms
-
-
-def prepare_argparser():
-    """Return the object that parses command-line arguments.
-
-    Returns
-    -------
-    argparse.ArgumentParser
-        The object that parses command-line arguments.
-
-    """
-    parser = argparse.ArgumentParser(
-        description="Compile WRF.",
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-    )
-    parser.add_argument(
-        "--optfile",
-        help="File containing compilation options (JSON format).",
-        default=None,
-    )
-    parser.add_argument(
-        "--repository",
-        help="Git repository containing the WRF model code.",
-        default=cms.URL_WRFCHEMPOLAR,
-    )
-    parser.add_argument(
-        "--commit",
-        help="Git commit to use.",
-        default="polar/main",
-    )
-    parser.add_argument(
-        "--destination",
-        help="Directory that will host the installation.",
-        default="./WRF",
-    )
-    parser.add_argument(
-        "--git",
-        help="Git command (useful to use a non-default installation).",
-        default="git",
-    )
-    parser.add_argument(
-        "--scheduler",
-        help="Whether or not to compile in a scheduled job.",
-        action=cms.ConvertToBoolean,
-        default=False,
-    )
-    parser.add_argument(
-        "--executable",
-        help="Which WRF executable to compile.",
-        default="em_real",
-    )
-    parser.add_argument(
-        "--components",
-        help="A comma-separated list of additional WRF components to compile.",
-        default="kpp,chem",
-    )
-    parser.add_argument(
-        "--patches",
-        help="Path to directory containing patches.",
-        default=None,
-    )
-    parser.add_argument(
-        "--sources",
-        help="Path to directory containing extra sources.",
-        default=None,
-    )
-    parser.add_argument(
-        "--dry",
-        help="Whether this is a dry run.",
-        action=cms.ConvertToBoolean,
-        default=False,
-    )
-    return parser
-
-
-def get_options():
-    """Return the pre-processed installation options.
-
-    Options are read from the command line, and optionally from an "option
-    file" (--optfile=/path/to/this/file at the command line). Command-line
-    arguments have priority over the option file.
-
-    Returns
-    -------
-    Namespace
-        The pre-processed user-defined installation options.
-
-    """
-    parser = prepare_argparser()
-    opts = parser.parse_args()
-    if opts.optfile is not None:
-        with open(opts.optfile) as f:
-            opts_from_file = json.load(f)
-        if not isinstance(opts_from_file, dict):
-            raise ValueError("Option file must represent a JSON dictionnary.")
-        for optname in opts_from_file:
-            if optname not in opts:
-                raise ValueError("Unknown option in file: %s." % optname)
-        parser.set_defaults(**opts_from_file)
-        opts = parser.parse_args()
-    if opts.repository.startswith("http://"):
-        raise ValueError("We do not allow http connections (not secure).")
-    if cms.repo_is_local(opts.repository):
-        opts.repository = cms.process_path(opts.repository)
-    opts.destination = cms.process_path(opts.destination)
-    if opts.components.strip() == "":
-        opts.components = []
-    else:
-        opts.components = [comp.strip() for comp in opts.components.split(",")]
-    opts.patches = cms.process_path(opts.patches)
-    opts.sources = cms.process_path(opts.sources)
-    return opts
-
-
-def clone_and_checkout(opts):
-    """Clone the WRF repository and checkout the required commit.
-
-    Parameters
-    ----------
-    opts: Namespace
-        The pre-processed user-defined installation options.
-
-    Raises
-    ------
-    RuntimeError
-        If the destination already exists.
-
-    """
-    if os.path.exists(opts.destination):
-        raise RuntimeError("Destination directory already exists.")
-    cms.run([opts.git, "clone", opts.repository, opts.destination])
-    cms.run([opts.git, "checkout", opts.commit], cwd=opts.destination)
-
-
-def prepare_slurm_options():
-    """Prepare slurm options.
-
-    Returns
-    -------
-    [str]
-        The lines of text that contain the slurm options.
-
-    """
-    host = cms.identify_host_platform()
-    slurm = {
-        "ntasks": "1",
-        "ntasks-per-node": "1",
-        "time": "02:30:00",
-    }
-    if host == "spirit":
-        slurm["partition"] = "zen16"
-        slurm["mem"] = "12GB"
-    return ["#SBATCH --%s=%s" % (key, value) for key, value in slurm.items()]
 
 
 def prepare_components(opts):
@@ -245,7 +90,7 @@ def write_job_script(opts):
     lines = ["#!/bin/bash"]
     if opts.scheduler:
         if host in ("spirit",):
-            lines += prepare_slurm_options()
+            lines += cms.prepare_slurm_options()
         else:
             raise NotImplementedError("Unsupported host: %s." % host)
 
@@ -271,79 +116,16 @@ def write_job_script(opts):
     cms.run(["chmod", "744", script], cwd=opts.destination)
 
 
-def write_options(opts):
-    """Write installation options into file for future reproducibility.
-
-    Parameters
-    ----------
-    opts: Namespace
-        The pre-processed user-defined installation options.
-
-    """
-    opts_dict = dict((key, value) for key, value in vars(opts).items())
-    opts_dict.pop("optfile")
-    opts_dict.pop("destination")
-    cmd = ["git", "rev-parse", "HEAD"]
-    opts_dict["commit"] = cms.run_stdout(cmd, cwd=opts.destination)[0]
-    opts_dict["components"] = ",".join(opts_dict["components"])
-    optfile = os.path.join(opts.destination, "compile.json")
-    with open(optfile, mode="x") as f:
-        json.dump(opts_dict, f, sort_keys=True, indent=4)
-        f.write("\n")
-
-
-def process_patches(opts):
-    """Apply patches, if any.
-
-    Parameters
-    ----------
-    opts: Namespace
-        The pre-processed user-defined installation options.
-
-    """
-    if opts.patches is None:
-        return
-    cmd = ["find", opts.patches, "-type", "f", "-name", "*.patch"]
-    patches = [cms.process_path(patch) for patch in cms.run_stdout(cmd)]
-    n = len(opts.patches) + 1
-    for patch in patches:
-        path_in_repo = os.path.join(opts.destination, patch[n:-6])
-        if os.path.exists(path_in_repo):
-            cms.run(["patch", path_in_repo, patch])
-        else:
-            msg = "Warning: file %s does not exist so cannot be patched."
-            print(msg % path_in_repo)
-
-
-def process_extra_sources(opts):
-    """Copy extra source files, if any, to the repository.
-
-    Parameters
-    ----------
-    opts: Namespace
-        The pre-processed user-defined installation options.
-
-    """
-    if opts.sources is None:
-        return
-    cmd = ["find", opts.sources, "-type", "f"]
-    sources = [cms.process_path(src) for src in cms.run_stdout(cmd)]
-    n = len(opts.sources) + 1
-    for src in sources:
-        path_in_repo = os.path.join(opts.destination, src[n:])
-        cms.run(["cp", "-v", src, path_in_repo])
-
-
 if __name__ == "__main__":
     # Actually do the work (parse user options, checkout, compile)
 
     host = cms.identify_host_platform()
-    opts = get_options()
+    opts = cms.get_options()
 
-    clone_and_checkout(opts)
-    write_options(opts)
-    process_patches(opts)
-    process_extra_sources(opts)
+    cms.clone_and_checkout(opts)
+    cms.write_options(opts)
+    cms.process_patches(opts)
+    cms.process_extra_sources(opts)
     write_job_script(opts)
 
     if opts.dry:
