@@ -191,14 +191,19 @@ def prepare_argparser(which):
         The object that parses command-line arguments.
 
     """
+    # "which"-dependent default values
     if which == "WPS":
         repository = URL_WPS
         commit = "master"
+        patches = os.path.join(path_of_repo(), "compile", "patches_WPS")
     elif which == "WRF":
         repository = URL_WRFCHEMPOLAR
         commit = "polar/main"
+        patches = None
     else:
         raise Exception("Invalid choice: %s." % which)
+
+    # Common command-line arguments
     parser = argparse.ArgumentParser(
         description="Compile %s." % which,
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -237,7 +242,7 @@ def prepare_argparser(which):
     parser.add_argument(
         "--patches",
         help="Path to directory containing patches.",
-        default=None,
+        default=patches,
     )
     parser.add_argument(
         "--sources",
@@ -250,7 +255,15 @@ def prepare_argparser(which):
         action=ConvertToBoolean,
         default=False,
     )
-    if which == "WRF":
+
+    # "which"-dependent command-line arguments
+    if which == "WPS":
+        parser.add_argument(
+            "--wrf-dir",
+            help="Directory where WRF is installed.",
+            default="./WRF",
+        )
+    elif which == "WRF":
         parser.add_argument(
             "--executable",
             help="Which WRF executable to compile.",
@@ -261,6 +274,9 @@ def prepare_argparser(which):
             help="A comma-separated list of extra WRF components to compile.",
             default="kpp,chem",
         )
+    else:
+        raise Exception("Invalid choice: %s." % which)
+
     return parser
 
 
@@ -299,10 +315,13 @@ def get_options(which):
     if repo_is_local(opts.repository):
         opts.repository = process_path(opts.repository)
     opts.destination = process_path(opts.destination)
-    if opts.components.strip() == "":
-        opts.components = []
-    else:
-        opts.components = [comp.strip() for comp in opts.components.split(",")]
+    if "components" in opts:
+        if opts.components.strip() == "":
+            opts.components = []
+        else:
+            opts.components = [
+                comp.strip() for comp in opts.components.split(",")
+            ]
     opts.patches = process_path(opts.patches)
     opts.sources = process_path(opts.sources)
     return opts
@@ -324,8 +343,8 @@ def clone_and_checkout(opts):
     """
     if os.path.exists(opts.destination):
         raise RuntimeError("Destination directory already exists.")
-    run([opts.git, "clone", opts.repository, opts.destination])
-    run([opts.git, "checkout", opts.commit], cwd=opts.destination)
+    run([opts.git, "clone", "--quiet", opts.repository, opts.destination])
+    run([opts.git, "checkout", "--quiet", opts.commit], cwd=opts.destination)
 
 
 def prepare_slurm_options(time):
@@ -368,7 +387,8 @@ def write_options(opts):
     opts_dict.pop("destination")
     cmd = ["git", "rev-parse", "HEAD"]
     opts_dict["commit"] = run_stdout(cmd, cwd=opts.destination)[0]
-    opts_dict["components"] = ",".join(opts_dict["components"])
+    if "components" in opts_dict:
+        opts_dict["components"] = ",".join(opts_dict["components"])
     optfile = os.path.join(opts.destination, "compile.json")
     with open(optfile, mode="x") as f:
         json.dump(opts_dict, f, sort_keys=True, indent=4)

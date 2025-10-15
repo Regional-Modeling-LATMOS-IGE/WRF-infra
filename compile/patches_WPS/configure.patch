@@ -1,0 +1,4 @@
+164c164
+<   if [ -f "$NETCDF/lib/libnetcdff.a" ] ; then
+---
+>   if [ -f "$NETCDF/lib/libnetcdff.a" ] || [ -f "$NETCDF/lib/libnetcdff.so" ] ; then

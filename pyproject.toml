@@ -10,7 +10,6 @@ dependencies = [
 [project.optional-dependencies]
 
 preprocess = [
-    "jasper",
     "pyproj",
     "netcdf4",
     "xarray",
