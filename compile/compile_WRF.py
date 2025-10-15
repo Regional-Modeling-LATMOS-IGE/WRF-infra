@@ -259,10 +259,10 @@ def write_job_script(opts):
 
     # Add the call to ./configure
     lines.append('echo -e "%d\\n%d" | \\' % (setup, nesting))
-    lines.append("./configure%s" % prepare_components(opts))
+    lines.append("$CONDA_RUN ./configure%s" % prepare_components(opts))
 
     # Add the call to ./compile
-    lines.append("./compile %s" % opts.executable)
+    lines.append("$CONDA_RUN ./compile %s" % opts.executable)
 
     # Write the script
     with open(script, mode="x") as f:
