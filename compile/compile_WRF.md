@@ -74,7 +74,7 @@ See below for an example of such a JSON file.
     "commit": "polar/main",
     "destination": "./WRF",
     "git": "git",
-    "scheduler": "no",
+    "scheduler": "yes",
     "executable": "em_real",
     "components": "kpp,chem"
 }

@@ -237,7 +237,7 @@ def prepare_argparser(which):
         "--scheduler",
         help="Whether or not to compile in a scheduled job.",
         action=ConvertToBoolean,
-        default=False,
+        default=True,
     )
     parser.add_argument(
         "--patches",
@@ -343,8 +343,8 @@ def clone_and_checkout(opts):
     """
     if os.path.exists(opts.destination):
         raise RuntimeError("Destination directory already exists.")
-    run([opts.git, "clone", "--quiet", opts.repository, opts.destination])
-    run([opts.git, "checkout", "--quiet", opts.commit], cwd=opts.destination)
+    run([opts.git, "clone", opts.repository, opts.destination])
+    run([opts.git, "checkout", opts.commit], cwd=opts.destination)
 
 
 def prepare_slurm_options(time):

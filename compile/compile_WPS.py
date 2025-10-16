@@ -52,7 +52,7 @@ def write_job_script(opts):
     lines = ["#!/bin/bash"]
     if opts.scheduler:
         if host in ("spirit",):
-            lines += cms.prepare_slurm_options()
+            lines += cms.prepare_slurm_options("00:30:00")
         else:
             raise NotImplementedError("Unsupported host: %s." % host)
 
