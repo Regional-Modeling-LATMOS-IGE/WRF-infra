@@ -62,7 +62,7 @@ date_e="$yye-$mme-$dde"
 ID="$(date +"%Y%m%d").$SLURM_JOBID"
 
 # Case name for the output folder
-if [ -n "$CASENAME_COMMENT" ]; then 
+if [ -n "$CASENAME_COMMENT" ]; then
   CASENAME_COMMENT="_${CASENAME_COMMENT}"
 fi
 
@@ -73,13 +73,13 @@ REALDIR="${OUTDIR_ROOT}/real_${CASENAME}${CASENAME_COMMENT}_$(date -d "$date_s" 
 if [ -d "$REALDIR" ]; then
   rm -f "$REALDIR/"*
 else
-  mkdir "$REALDIR"
+  mkdir -pv "$REALDIR"
 fi
 
 # Also create a temporary scratch run directory
 SCRATCH="$SCRATCH_ROOT/real_${CASENAME}${CASENAME_COMMENT}_$(date -d "$date_s" "+%Y").${ID}.scratch"
 rm -rf "$SCRATCH"
-mkdir "$SCRATCH"
+mkdir -pv "$SCRATCH"
 cd "$SCRATCH" || exit
 
 # Write the info on input/output directories to run log file
@@ -199,7 +199,7 @@ else
   exit 1
 fi
 tail mozbc.out
- 
+
 #---- Run wes-coldens preprocessor (needed only for the MOZART gas phase mechanism, creates a
 # wrf_season* and exo_coldens* file, containing seasonal dry deposition
 # coefficients and trace gases above the domain top, respectively)
@@ -275,4 +275,3 @@ cp ./namelist.output "$REALDIR/"
 
 # Remove scratch dir
 rm -rf "$SCRATCH"
-
