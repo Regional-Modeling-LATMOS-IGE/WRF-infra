@@ -23,6 +23,7 @@ except ImportError:
 # the WRF model code (WRF/share/module_model_constants.F). We use SI units for
 # all constants
 constants = dict(
+    g=9.81,  # Acceleraation due to gravity (m s-2)**
     pot_temp_t0=300,  # Base state potential temperature (K)**
     pot_temp_p0=1e5,  # Base state surface pressure for potential temp. (Pa)**
     r_air=287,  # Specific gas constant of dry air (J kg-1 K-1)**
@@ -410,6 +411,11 @@ class WRFDatasetAccessor(GenericDatasetAccessor):
         return WRFAtmPressure(self._dataset)
 
     @property
+    def sea_level_pressure(self):
+        """The DerivedVariable object to calculate sea-level pressure."""
+        return WRFSeaLevelPressure(self._dataset)
+
+    @property
     def air_temperature(self):
         """The DerivedVariable object to calculate air temperature."""
         return WRFAirTemperature(self._dataset)
@@ -525,6 +531,35 @@ class WRFAtmPressure(DerivedVariable):
             name="atmospheric pressure",
             attrs=dict(long_name="Atmospheric pressure", units="Pa"),
         )
+
+
+class WRFSeaLevelPressure(DerivedVariable):
+    """Derived variable for sea-level pressure from WRF outputs."""
+
+    def __getitem__(self, *args):
+        """Return the sea-level pressure.
+
+        Parameters
+        ----------
+        *args: slice
+            Slice of interest in the WRF output.
+
+        Return
+        ------
+        xarray.DataArray
+            The sea-level pressure for given slice, in Pa.
+
+        """
+        wrf = self._dataset.wrf
+        p = wrf.atm_pressure.__getitem__(*args)
+        t = wrf.air_temperature.__getitem__(*args)
+
+        # return xr.DataArray(
+        #     self._dataset[varname_p].__getitem__(*args)
+        #     + self._dataset[varname_pb].__getitem__(*args),
+        #     name="atmospheric pressure",
+        #     attrs=dict(long_name="Atmospheric pressure", units="Pa"),
+        # )
 
 
 class WRFAirTemperature(DerivedVariable):
