@@ -69,12 +69,12 @@ fi
 REALDIR="${INDIR_ROOT}/real_${CASENAME}${CASENAME_COMMENT}_$(date -d "$date_s" "+%Y")"
 # Directory containing WRF-Chem output
 OUTDIR="${OUTDIR_ROOT}/DONE.${CASENAME}${CASENAME_COMMENT}.$ID"
-mkdir "$OUTDIR"
+mkdir -pv "$OUTDIR"
 
 # Also create a temporary run directory
 SCRATCH="$SCRATCH_ROOT/DONE.${CASENAME}${CASENAME_COMMENT}.$ID.scratch"
 rm -rf "$SCRATCH"
-mkdir "$SCRATCH"
+mkdir -pv "$SCRATCH"
 cd "$SCRATCH" || exit
 
 # Write the info on input/output directories to run log file
@@ -174,4 +174,3 @@ cp ./rsl.* ./namelist.* "$OUTDIR/"
 
 # Remove scratch dir
 rm -rf "$SCRATCH"
-
