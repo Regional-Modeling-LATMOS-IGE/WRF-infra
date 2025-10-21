@@ -656,7 +656,7 @@ class WRFRelativeHumidity(DerivedVariable):
         # Calculate the saturation water vapor mixing ratio
         pressure = wrf.atm_pressure.__getitem__(*args)
         r = constants["mm_water"] / constants["mm_dryair"]
-        qsat = r * psat / (pressure - psat * (1 - r))
+        qsat = r * psat / (pressure - psat)
 
         # Calculate and return the relative humidity
         return xr.DataArray(
