@@ -43,7 +43,7 @@ except ImportError:
 # the WRF model code (WRF/share/module_model_constants.F). We use SI units for
 # all constants
 constants = dict(
-    g=9.81,  # Acceleraation due to gravity (m s-2)**
+    g=9.81,  # Acceleration due to gravity (m s-2)**
     pot_temp_t0=300,  # Base state potential temperature (K)**
     pot_temp_p0=1e5,  # Base state surface pressure for potential temp. (Pa)**
     r_air=287,  # Specific gas constant of dry air (J kg-1 K-1)**
