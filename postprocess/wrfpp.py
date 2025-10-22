@@ -2,7 +2,26 @@
 #
 # License: BSD 3-clause "new" or "revised" license (BSD-3-Clause).
 
-"""Module wrfpp: an xarray dataset accessor for WRF and WRF-Chem outputs."""
+"""Module wrfpp: an xarray dataset accessor for WRF and WRF-Chem outputs.
+
+References
+----------
+
+The WRF model:
+    The development of the WRF atmospheric model is chaperoned by UCAR
+    (University Corporation for Atmospheric Research). The WRF model code is
+    released into the public domain (although the name "WRF" is a registered
+    trademark of UCAR).
+
+    It is currently hosted on GitHub:
+
+    https://github.com/wrf-model/WRF
+
+    And mirrored on Software Heritage:
+
+    https://archive.softwareheritage.org/swh:1:dir:6b658fbc98077fe0648cba724921679126464181
+
+"""
 
 # Required imports
 from abc import ABC, abstractmethod
@@ -29,6 +48,8 @@ constants = dict(
     pot_temp_p0=1e5,  # Base state surface pressure for potential temp. (Pa)**
     r_air=287,  # Specific gas constant of dry air (J kg-1 K-1)**
     cp_air=1004.5,  # Heat cap. of dry air at constant pressure (J kg-1 K-1)**
+    mm_dryair=28.966e-3,  # Molar mass of dry air (kg mol-1)**
+    mm_water=18.015e-3,  # Molar mass of water (kg mol-1)
 )
 
 
@@ -457,6 +478,11 @@ class WRFDatasetAccessor(GenericDatasetAccessor):
         return WRFDensityOfDryAir(self._dataset)
 
     @property
+    def relative_humidity(self):
+        """The DerivedVariable object to calculate relative humidity."""
+        return WRFRelativeHumidity(self._dataset)
+
+    @property
     def accumulated_precipitation(self):
         """The DerivedVariable object to calculate accumulated total precipitation."""
         return WRFAccumulatedPrecipitation(self._dataset)
@@ -494,6 +520,18 @@ class DerivedVariable(ABC):
 
         """
         pass
+
+    @property
+    def values(self):
+        """The values object corresponding to the derived variable.
+
+        Returns
+        -------
+        np.array
+            The values object corresponding to the derived variable.
+
+        """
+        return self[:].values
 
     def __str__(self):
         """String representation of the DataArray of the derived variable.
@@ -698,6 +736,51 @@ class WRFDensityOfDryAir(DerivedVariable):
             pressure / (constants["r_air"] * air_temp),
             name="dry air density",
             attrs=dict(long_name="Dry air density", units="kg m-3"),
+        )
+
+
+class WRFRelativeHumidity(DerivedVariable):
+    """WRF derived variable for relative humidity."""
+
+    def __getitem__(self, *args):
+        """Return the relative humidity.
+
+        Parameters
+        ----------
+        *args: slice
+            Slice of interest in the WRF output.
+
+        Return
+        ------
+        xarray.DataArray
+            The relative humidity for given slice, in %.
+
+        Notes
+        -----
+        We use the same equation to calculate the saturation vapor pressure as
+        in the WRF model (eg. WRF/main/tc_em.F, subroutine qvtorh).
+
+        """
+        # Get the water vapor mixing ratio
+        wrf = self._dataset.wrf
+        varname, expected_units = "QVAPOR", "kg kg-1"
+        wrf.check_units(varname, expected_units)
+        q = wrf[varname].__getitem__(*args)
+
+        # Calculate the saturation water vapor pressure (in Pa)
+        temperature = wrf.air_temperature.__getitem__(*args) - 273.15
+        psat = 611.2 * np.exp(17.67 * temperature / (temperature + 243.5))
+
+        # Calculate the saturation water vapor mixing ratio
+        pressure = wrf.atm_pressure.__getitem__(*args)
+        r = constants["mm_water"] / constants["mm_dryair"]
+        qsat = r * psat / (pressure - psat)
+
+        # Calculate and return the relative humidity
+        return xr.DataArray(
+            100 * q / qsat,
+            name="relative humidity",
+            attrs=dict(long_name="Relative humidity", units="%"),
         )
 
 
