@@ -318,46 +318,7 @@ class WRFDatasetAccessor(GenericDatasetAccessor):
     dataset: xarray dataset
         The xarray dataset instance for which the accessor is defined.
 
-    Attributes
-    ----------
-    dimname_x: str
-        The name of the x-dimension in the file (not staggered).
-    dimname_y: str
-        The name of the y-dimension in the file (not staggered).
-    dimname_z: str
-        The name of the z-dimension in the file (not staggered).
-    dimname_x_stag: str
-        The name of the x-dimension in the file (staggered).
-    dimname_y_stag: str
-        The name of the y-dimension in the file (staggered).
-    dimname_z_stag: str
-        The name of the z-dimension in the file (staggered).
-
     """
-
-    dimname_x = "west_east"
-    dimname_y = "south_north"
-    dimname_z = "bottom_top"
-    dimname_x_stag = "west_east_stag"
-    dimname_y_stag = "south_north_stag"
-    dimname_z_stag = "bottom_top_stag"
-
-    # Properties to easily access WRF dimensions
-
-    @property
-    def nx(self):
-        """The number of grid points in the x direction (non-staggered)"""
-        return self.sizes[self.dimname_x]
-
-    @property
-    def ny(self):
-        """The number of grid points in the y direction (non-staggered)"""
-        return self.sizes[self.dimname_y]
-
-    @property
-    def nz(self):
-        """The number of grid points in the z direction (non-staggered)"""
-        return self.sizes[self.dimname_z]
 
     # Facilities for destaggering data
 
@@ -375,15 +336,15 @@ class WRFDatasetAccessor(GenericDatasetAccessor):
             The name of all the dimensions of the array that are staggered.
 
         """
-        out = []
-        for which in "xyz":
-            not_staggered = getattr(self, "dimname_%s" % which) in array.dims
-            staggered = getattr(self, "dimname_%s_stag" % which) in array.dims
+        dims = []
+        for dim in ("west_east", "south_north", "bottom_top"):
+            not_staggered = dim in array.dims
+            staggered = "%s_stag" % dim in array.dims
             if not_staggered and staggered:
-                raise ValueError("Dimension %s present in both forms." % which)
+                raise ValueError("Dimension %s present in both forms." % dim)
             elif staggered:
-                out.append(which)
-        return tuple(out)
+                dims.append(dim)
+        return tuple(dims)
 
     def destagger(self, array, dim=None):
         """Destagger given array.
@@ -410,13 +371,10 @@ class WRFDatasetAccessor(GenericDatasetAccessor):
                 msg = "Array has zero or more than one staggered dimension(s)."
                 raise ValueError(msg)
             dim = staggered_dims[0]
-
-        # Actual names of the 2 versions of the dimension
-        dimname = getattr(self, "dimname_%s" % dim)
-        dimname_stag = getattr(self, "dimname_%s_stag" % dim)
+        dim_stag = "%s_stag" % dim
 
         # Prepare the slices for the average
-        idx = array.dims.index(dimname_stag)
+        idx = array.dims.index(dim_stag)
         n = array.shape[idx]
         slices_1 = [slice(None)] * len(array.dims)
         slices_2 = [slice(None)] * len(array.dims)
@@ -425,7 +383,7 @@ class WRFDatasetAccessor(GenericDatasetAccessor):
 
         # Destagger
         out = (array[tuple(slices_1)] + array[tuple(slices_2)]) / 2
-        return out.rename({dimname_stag: dimname})
+        return out.rename({dim_stag: dim})
 
     # Facilities for handling geographical projections
 
@@ -748,7 +706,7 @@ class WRFSeaLevelPressure(DerivedVariable):
 
         """
         wrf = self._dataset.wrf
-        nz = wrf.nz
+        nz = wrf.sizes["bottom_top"]
 
         # We find the lowest level that is above above the surface by a
         # pre-defined threshold. We later use this level to extrapolate a
@@ -758,7 +716,7 @@ class WRFSeaLevelPressure(DerivedVariable):
         p = wrf.atm_pressure
         diff = p[:] - (p.isel(bottom_top=0) - p_threshold)
         idx = diff.bottom_top.where(diff < 0).min(
-            dim=wrf.dimname_z, keepdims=True
+            dim="bottom_top", keepdims=True
         )
         if np.any(np.isnan(idx)):
             raise ValueError("Could not find all levels for extrapolation.")
@@ -770,7 +728,7 @@ class WRFSeaLevelPressure(DerivedVariable):
             raise ValueError("Levels for extrapolation are equal.")
 
         # Get atmospheric pressure at both levels
-        idim_z = p.dims.index(wrf.dimname_z)
+        idim_z = p.dims.index("bottom_top")
         p_low = np.take_along_axis(p.values, idx_low, axis=idim_z)
         p_high = np.take_along_axis(p.values, idx_high, axis=idim_z)
 
@@ -778,24 +736,24 @@ class WRFSeaLevelPressure(DerivedVariable):
         varname_q, units_q = "QVAPOR", "kg kg-1"
         wrf.check_units(varname_q, units_q)
         q = wrf[varname_q]
-        idim_z = q.dims.index(wrf.dimname_z)
+        idim_z = q.dims.index("bottom_top")
         q_low = np.take_along_axis(q.values, idx_low, axis=idim_z)
         q_high = np.take_along_axis(q.values, idx_high, axis=idim_z)
 
         # Get air temperature at both levels
         t = wrf.air_temperature.__getitem__(*args)
-        idim_z = t.dims.index(wrf.dimname_z)
+        idim_z = t.dims.index("bottom_top")
         t_low = np.take_along_axis(t[:].values, idx_low, axis=idim_z)
         t_high = np.take_along_axis(t[:].values, idx_high, axis=idim_z)
         t_low *= 1 + 0.608 * q_low
         t_high *= 1 + 0.608 * q_high
 
         # Get surface elevation at both levels
-        z = wrf.destagger(wrf.geopotential[:], dim="z").values / constants["g"]
+        ph = wrf.destagger(wrf.geopotential[:], dim="bottom_top")
+        z = ph.values / constants["g"]
         z_low = np.take_along_axis(z, idx_low, axis=idim_z)
         z_high = np.take_along_axis(z, idx_low, axis=idim_z)
 
-        # idim_z = ph.dims.index(wrf.dimname_z_stag)
         # return xr.DataArray(
         #     self._dataset[varname_p].__getitem__(*args)
         #     + self._dataset[varname_pb].__getitem__(*args),
