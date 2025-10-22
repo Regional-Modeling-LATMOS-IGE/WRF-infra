@@ -23,27 +23,25 @@ The WRF model:
 
 """
 
-# Required imports
 from abc import ABC, abstractmethod
 import warnings
 import functools
 import numpy as np
 import xarray as xr
 
-# Optional imports
-_optional_dependencies = dict()
+_optional_imports = dict()
 try:
     import pyproj
 except ImportError:
-    _optional_dependencies["pyproj"] = False
+    _optional_imports["pyproj"] = False
 else:
-    _optional_dependencies["pyproj"] = True
+    _optional_imports["pyproj"] = True
 try:
     import cartopy
 except ImportError:
-    _optional_dependencies["cartopy"] = False
+    _optional_imports["cartopy"] = False
 else:
-    _optional_dependencies["cartopy"] = True
+    _optional_imports["cartopy"] = True
 
 # The following constants that are marked with ** use the same values as in
 # the WRF model code (WRF/share/module_model_constants.F). We use SI units for
@@ -58,7 +56,7 @@ constants = dict(
 )
 
 
-def _chech_optional_dependencies(*dependencies):
+def _chech_optional_imports(*imports):
     """Decorator that checks the successful import of optional dependencies.
 
     Parameters
@@ -68,23 +66,23 @@ def _chech_optional_dependencies(*dependencies):
 
     """
 
-    def _decorator_chech_opt_dep(func):
+    def _decorator_chech_optional_imports(func):
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
-            for dep in dependencies:
-                if not _optional_dependencies[dep]:
+            for imp in imports:
+                if not _optional_imports[imp]:
                     raise ImportError(
                         "Could not import optional dependency "
-                        "(%s) that is needed here." % dep
+                        "(%s) that is needed here." % imp
                     )
             return func(*args, **kwargs)
 
         return wrapper
 
-    return _decorator_chech_opt_dep
+    return _decorator_chech_optional_imports
 
 
-@_chech_optional_dependencies("pyproj")
+@_chech_optional_imports("pyproj")
 def _transformer_from_crs(crs, reverse=False):
     """Return the pyproj Transformer corresponding to given CRS.
 
@@ -355,7 +353,7 @@ class WRFDatasetAccessor(GenericDatasetAccessor):
     # Facilities for handling geographical projections
 
     @property
-    @_chech_optional_dependencies("pyproj")
+    @_chech_optional_imports("pyproj")
     def crs_pyproj(self):
         """The pyproj CRS corresponding to dataset."""
         if self.attrs["POLE_LON"] != 0:
@@ -424,7 +422,7 @@ class WRFDatasetAccessor(GenericDatasetAccessor):
         return pyproj.CRS.from_dict(proj)
 
     @property
-    @_chech_optional_dependencies("pyproj", "cartopy")
+    @_chech_optional_imports("pyproj", "cartopy")
     def crs_cartopy(self):
         """The cartopy CRS corresponding to dataset."""
         # We let self.crs_pyproj do all the quality checking
