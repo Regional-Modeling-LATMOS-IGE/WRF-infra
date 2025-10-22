@@ -7,6 +7,7 @@
 # Required imports
 from abc import ABC, abstractmethod
 import warnings
+import numpy as np
 import xarray as xr
 
 # Optional imports
@@ -296,7 +297,37 @@ class WRFDatasetAccessor(GenericDatasetAccessor):
     dataset: xarray dataset
         The xarray dataset instance for which the accessor is defined.
 
+    Attributes
+    ----------
+    dimname_x: str
+        The name of the x-dimension in the file.
+    dimname_y: str
+        The name of the y-dimension in the file.
+    dimname_z: str
+        The name of the z-dimension in the file.
+
     """
+
+    dimname_x = "west_east"
+    dimname_y = "south_north"
+    dimname_z = "bottom_top"
+
+    # Properties to easily access WRF dimensions
+
+    @property
+    def nx(self):
+        """The number of grid points in the x direction (non-staggered)"""
+        return self.sizes[self.dimname_x]
+
+    @property
+    def ny(self):
+        """The number of grid points in the y direction (non-staggered)"""
+        return self.sizes[self.dimname_y]
+
+    @property
+    def nz(self):
+        """The number of grid points in the z direction (non-staggered)"""
+        return self.sizes[self.dimname_z]
 
     # Facilities for handling geographical projections
 
@@ -477,6 +508,24 @@ class DerivedVariable(ABC):
         """
         return self[:].__str__()
 
+    # Make instances of this class have the same interface as xr.DataArrays
+
+    @property
+    def dims(self):
+        return self[:].dims
+
+    @property
+    def loc(self):
+        return self[:].loc
+
+    @property
+    def isel(self):
+        return self[:].isel
+
+    @property
+    def sel(self):
+        return self[:].sel
+
 
 class WRFPotentialTemperature(DerivedVariable):
     """Derived variable for potential temperature from WRF outputs."""
@@ -549,17 +598,52 @@ class WRFSeaLevelPressure(DerivedVariable):
         xarray.DataArray
             The sea-level pressure for given slice, in Pa.
 
+        Note
+        ----
+        This method copies the sea-level pressure calculation of the WRF model,
+        cf. subroutine compute_seaprs in (it is duplicated in both files):
+         - var/da/da_verif_grid/da_verif_grid.f90
+         - var/da/da_verif_anal/da_verif_anal.f90
+
         """
         wrf = self._dataset.wrf
-        p = wrf.atm_pressure.__getitem__(*args)
+        nz = wrf.nz
+
+        # We find the lowest level that is above above the surface by a
+        # pre-defined threshold. We later use this level to extrapolate a
+        # surface pressure and temperature, which is supposed to reduce the
+        # effect of the diurnal heating cycle in the pressure field
+        p_threshold = 1e4
+        p = wrf.atm_pressure
+        diff = p[:] - (p.isel(bottom_top=0) - p_threshold)
+        idx = diff.bottom_top.where(diff < 0).min(
+            dim=wrf.dimname_z, keepdims=True
+        )
+        if np.any(np.isnan(idx)):
+            raise ValueError("Could not find all levels for extrapolation.")
+
+        # Get the air temperarature at the threshold layer, and use it to
+        # extrapolate a surface temperature and a sea-level temperature
+        idx_low = np.where(idx > 0, idx - 1, 0).astype(int)
+        idx_high = np.where(idx_low < nz - 2, idx_low + 1, nz - 1).astype(int)
+        if np.any(idx_low == idx_high):
+            raise ValueError("Levels for extrapolation are equal.")
+
+        idim_z = p.dims.index(wrf.dimname_z)
+        p_low = np.take_along_axis(p[:].values, idx_low, axis=idim_z)
+        p_high = np.take_along_axis(p[:].values, idx_high, axis=idim_z)
+
         t = wrf.air_temperature.__getitem__(*args)
+        idim_z = t.dims.index(wrf.dimname_z)
+        t_low = np.take_along_axis(t[:].values, idx_low, axis=idim_z)
+        t_high = np.take_along_axis(t[:].values, idx_high, axis=idim_z)
 
         # return xr.DataArray(
         #     self._dataset[varname_p].__getitem__(*args)
         #     + self._dataset[varname_pb].__getitem__(*args),
         #     name="atmospheric pressure",
         #     attrs=dict(long_name="Atmospheric pressure", units="Pa"),
-        # )
+        #
 
 
 class WRFAirTemperature(DerivedVariable):
