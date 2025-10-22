@@ -26,18 +26,24 @@ The WRF model:
 # Required imports
 from abc import ABC, abstractmethod
 import warnings
+import functools
 import numpy as np
 import xarray as xr
 
 # Optional imports
+_optional_dependencies = dict()
 try:
     import pyproj
 except ImportError:
-    pass
+    _optional_dependencies["pyproj"] = False
+else:
+    _optional_dependencies["pyproj"] = True
 try:
     import cartopy
 except ImportError:
-    pass
+    _optional_dependencies["cartopy"] = False
+else:
+    _optional_dependencies["cartopy"] = True
 
 # The following constants that are marked with ** use the same values as in
 # the WRF model code (WRF/share/module_model_constants.F). We use SI units for
@@ -52,6 +58,33 @@ constants = dict(
 )
 
 
+def _chech_optional_dependencies(*dependencies):
+    """Decorator that checks the successful import of optional dependencies.
+
+    Parameters
+    ----------
+    dependencies: *str
+        The dependencies to check (eg "pyproj", "cartopy").
+
+    """
+
+    def _decorator_chech_opt_dep(func):
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            for dep in dependencies:
+                if not _optional_dependencies[dep]:
+                    raise ImportError(
+                        "Could not import optional dependency "
+                        "(%s) that is needed here." % dep
+                    )
+            return func(*args, **kwargs)
+
+        return wrapper
+
+    return _decorator_chech_opt_dep
+
+
+@_chech_optional_dependencies("pyproj")
 def _transformer_from_crs(crs, reverse=False):
     """Return the pyproj Transformer corresponding to given CRS.
 
@@ -322,6 +355,7 @@ class WRFDatasetAccessor(GenericDatasetAccessor):
     # Facilities for handling geographical projections
 
     @property
+    @_chech_optional_dependencies("pyproj")
     def crs_pyproj(self):
         """The pyproj CRS corresponding to dataset."""
         if self.attrs["POLE_LON"] != 0:
@@ -390,6 +424,7 @@ class WRFDatasetAccessor(GenericDatasetAccessor):
         return pyproj.CRS.from_dict(proj)
 
     @property
+    @_chech_optional_dependencies("pyproj", "cartopy")
     def crs_cartopy(self):
         """The cartopy CRS corresponding to dataset."""
         # We let self.crs_pyproj do all the quality checking
