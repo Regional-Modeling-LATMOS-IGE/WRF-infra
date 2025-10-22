@@ -376,10 +376,9 @@ class WRFDatasetAccessor(GenericDatasetAccessor):
         # Prepare the slices for the average
         idx = array.dims.index(dim_stag)
         n = array.shape[idx]
-        slices_1 = [slice(None)] * len(array.dims)
-        slices_2 = [slice(None)] * len(array.dims)
-        slices_1[idx] = slice(0, n - 1)
-        slices_2[idx] = slice(1, n)
+        r = range(len(array.dims))
+        slices_1 = (slice(None) if i != idx else slice(0, n - 1) for i in r)
+        slices_2 = (slice(None) if i != idx else slice(1, n) for i in r)
 
         # Destagger
         out = (array[tuple(slices_1)] + array[tuple(slices_2)]) / 2
@@ -708,6 +707,9 @@ class WRFSeaLevelPressure(DerivedVariable):
         wrf = self._dataset.wrf
         nz = wrf.sizes["bottom_top"]
 
+        # Constant(s)
+        lapse_rate = 0.0065  # in K m-1
+
         # We find the lowest level that is above above the surface by a
         # pre-defined threshold. We later use this level to extrapolate a
         # surface pressure and temperature, which is supposed to reduce the
@@ -728,31 +730,48 @@ class WRFSeaLevelPressure(DerivedVariable):
             raise ValueError("Levels for extrapolation are equal.")
 
         # Get atmospheric pressure at both levels
-        idim_z = p.dims.index("bottom_top")
-        p_low = np.take_along_axis(p.values, idx_low, axis=idim_z)
-        p_high = np.take_along_axis(p.values, idx_high, axis=idim_z)
+        idim_p = p.dims.index("bottom_top")
+        p_low = np.take_along_axis(p.values, idx_low, axis=idim_p)
+        p_high = np.take_along_axis(p.values, idx_high, axis=idim_p)
 
         # Get specific humidity at both levels
         varname_q, units_q = "QVAPOR", "kg kg-1"
         wrf.check_units(varname_q, units_q)
         q = wrf[varname_q]
-        idim_z = q.dims.index("bottom_top")
-        q_low = np.take_along_axis(q.values, idx_low, axis=idim_z)
-        q_high = np.take_along_axis(q.values, idx_high, axis=idim_z)
+        idim_q = q.dims.index("bottom_top")
+        q_low = np.take_along_axis(q.values, idx_low, axis=idim_q)
+        q_high = np.take_along_axis(q.values, idx_high, axis=idim_q)
 
         # Get air temperature at both levels
         t = wrf.air_temperature.__getitem__(*args)
-        idim_z = t.dims.index("bottom_top")
-        t_low = np.take_along_axis(t[:].values, idx_low, axis=idim_z)
-        t_high = np.take_along_axis(t[:].values, idx_high, axis=idim_z)
+        idim_t = t.dims.index("bottom_top")
+        t_low = np.take_along_axis(t[:].values, idx_low, axis=idim_t)
+        t_high = np.take_along_axis(t[:].values, idx_high, axis=idim_t)
         t_low *= 1 + 0.608 * q_low
         t_high *= 1 + 0.608 * q_high
 
         # Get surface elevation at both levels
         ph = wrf.destagger(wrf.geopotential[:], dim="bottom_top")
         z = ph.values / constants["g"]
+        idim_z = ph.dims.index("bottom_top")
         z_low = np.take_along_axis(z, idx_low, axis=idim_z)
         z_high = np.take_along_axis(z, idx_low, axis=idim_z)
+
+        # Calculate the surface and sea-level temperature
+        slice_bottom = (
+            slice(0, 1) if d == "bottom_top" else slice(None) for d in p.dims
+        )
+        p_bottom = p[tuple(slice_bottom)]
+        p_at_thresh = p_bottom - p_threshold
+        factor = np.log(p_at_thresh / p_high) * np.log(p_low / p_high)
+        t_at_thresh = t_high - (t_high - t_low) * factor
+        z_at_thresh = z_high - (z_high - z_low) * factor
+        exponent = lapse_rate * constants["r_air"] / constants["g"]
+        t_surf = t_at_thresh * (p_bottom / p_at_thresh) ** exponent
+        t_sealevel = t_at_thresh + lapse_rate * z_at_thresh
+
+        # Apply correction to the sea level temperature if both the surface and
+        # sea level temnperatures are too high
 
         # return xr.DataArray(
         #     self._dataset[varname_p].__getitem__(*args)
