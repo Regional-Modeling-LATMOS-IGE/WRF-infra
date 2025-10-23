@@ -747,8 +747,11 @@ class WRFSeaLevelPressure(DerivedVariable):
         idim_t = t.dims.index("bottom_top")
         t_low = np.take_along_axis(t[:].values, idx_low, axis=idim_t)
         t_high = np.take_along_axis(t[:].values, idx_high, axis=idim_t)
-        t_low *= 1 + 0.608 * q_low
-        t_high *= 1 + 0.608 * q_high
+
+        # Calculate the corresponding virtual temperature
+        coeff = constants["mm_dryair"] / constants["mm_water"] - 1
+        t_low *= 1 + coeff * q_low
+        t_high *= 1 + coeff * q_high
 
         # Get surface elevation at both levels
         ph = wrf.destagger(wrf.geopotential[:], dim="bottom_top")
