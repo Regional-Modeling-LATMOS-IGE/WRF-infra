@@ -307,7 +307,40 @@ class GenericDatasetAccessor(ABC):
         tr = _transformer_from_crs(self.crs, reverse=True)
         return tr.transform(x, y)
 
-
+    # RP WIP ----------
+    def find_nearest_gridpoints(self, lat, lon, surrounding=True):
+        wrf = self._dataset.wrf
+        wrflons, wrflats = wrf["XLONG"].values, wrf["XLAT"].values
+        wrflons_flat, wrflats_flat = wrflons.flatten(), wrflats.flatten()
+        targetlons = lon*np.ones(wrflons.shape)
+        targetlats = lat*np.ones(wrflats.shape)
+        _, _, dists = pyproj.Geod(ellps="WGS84").inv(targetlons, targetlats, wrflons, wrflats)
+        # calculate smallest grid distance to test if target point is in domain
+        xcoord, ycoord = wrf.ll2xy(wrflons, wrflats)
+        xresn = abs(np.diff(xcoord,axis=1))
+        yresn = abs(np.diff(ycoord,axis=0))
+        min_grid_dist = np.amin([xresn.flatten(), yresn.flatten()])
+        if np.amin(dists) > min_grid_dist/2:
+            print(f"[ERROR] point at {lat:.2f}, {lon:.2f} is outside this domain")
+            return
+        # get inds of the (ny*nx)-shaped arrays containing the gridpoint at min distance
+        # and unravel back into 2 indices for the (ny, nx) arrays
+        j, i = np.unravel_index(np.argmin(dists), wrflons.shape)
+        if surrounding:
+            (ny, nx) = wrflons.shape
+            # if not 0<i<nx or not 0<j<ny:
+            #     # point is at the edge of the domain
+            #     # do something
+            # constrict slice to be within [0, nx] or [0, ny]
+            imin, jmin = np.max([0, i-1]), np.max([0, j-1])
+            imax, jmax = np.min([nx, i+2]), np.min([ny, j+2])
+            jslice = slice(jmin, jmax)
+            islice = slice(imin, imax)
+            return wrf[:].isel(south_north=jslice, west_east=islice)
+        else:
+            return wrf[:].isel(south_north=j, west_east=i)
+    # -----------------
+        
 @xr.register_dataset_accessor("wrf")
 class WRFDatasetAccessor(GenericDatasetAccessor):
     """Accessor for WRF and WRF-Chem outputs.
