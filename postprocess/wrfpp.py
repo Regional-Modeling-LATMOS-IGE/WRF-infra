@@ -308,37 +308,55 @@ class GenericDatasetAccessor(ABC):
         return tr.transform(x, y)
 
     # RP WIP ----------
-    def find_nearest_gridpoints(self, lat, lon, surrounding=True):
+    def find_nearest_gridpoints(self, lat, lon, nearest_neighbours=True):
+        ## TODO fix code for case where lat/lon on edge of domain
         wrf = self._dataset.wrf
+
+        # set up lat/lon arrays
         wrflons, wrflats = wrf["XLONG"].values, wrf["XLAT"].values
-        wrflons_flat, wrflats_flat = wrflons.flatten(), wrflats.flatten()
         targetlons = lon*np.ones(wrflons.shape)
         targetlats = lat*np.ones(wrflats.shape)
-        _, _, dists = pyproj.Geod(ellps="WGS84").inv(targetlons, targetlats, wrflons, wrflats)
-        # calculate smallest grid distance to test if target point is in domain
-        xcoord, ycoord = wrf.ll2xy(wrflons, wrflats)
-        xresn = abs(np.diff(xcoord,axis=1))
-        yresn = abs(np.diff(ycoord,axis=0))
-        min_grid_dist = np.amin([xresn.flatten(), yresn.flatten()])
+
+        # calcuate distance between lat/lon and each gridpoint
+        geod = pyproj.Geod(ellps="WGS84")
+        _, _, dists = geod.inv(targetlons, targetlats, wrflons, wrflats)
+
+        # if the target is in the domain, min(dists) < 0.5 * grid length
+        dx, dy = wrf.attrs["DX"], wrf.attrs["DY"]
+        min_grid_dist = np.amin([dx, dy])
         if np.amin(dists) > min_grid_dist/2:
-            print(f"[ERROR] point at {lat:.2f}, {lon:.2f} is outside this domain")
-            return
-        # get inds of the (ny*nx)-shaped arrays containing the gridpoint at min distance
-        # and unravel back into 2 indices for the (ny, nx) arrays
+            raise ValueError(f"Point ({lat}, {lon}) is outside model domain bounds.")
+
+        # get index of gridpoint at min(dist) and unravel into i, j inds
         j, i = np.unravel_index(np.argmin(dists), wrflons.shape)
-        if surrounding:
+
+        # construct slices for 3x3 grid of surrouding gridpoints
+        if nearest_neighbours:
             (ny, nx) = wrflons.shape
-            # if not 0<i<nx or not 0<j<ny:
-            #     # point is at the edge of the domain
-            #     # do something
-            # constrict slice to be within [0, nx] or [0, ny]
+            # make sure i,j values are within [0, n]
             imin, jmin = np.max([0, i-1]), np.max([0, j-1])
             imax, jmax = np.min([nx, i+2]), np.min([ny, j+2])
             jslice = slice(jmin, jmax)
             islice = slice(imin, imax)
-            return wrf[:].isel(south_north=jslice, west_east=islice)
+            subset = self._dataset.isel(
+                south_north=jslice, west_east=islice)
+
+            if i==0 or i==nx or j==0 or j==ny:
+                # point is at the edge of the domain
+                # won't have south_west, west_east of len 3 as expected
+                # pad with NaNs to conserve 3x3 shape
+                # TODO: this is currently not working,
+                #       don't think the if statement is triggering
+                subset = subset.reindex(
+                    south_north=np.arange(j-1, j+2),
+                    west_east=np.arange(i-1, i+2),
+                    fill_value=np.nan
+                )
+
         else:
-            return wrf[:].isel(south_north=j, west_east=i)
+            subset = self._dataset.isel(south_north=j, west_east=i)
+
+        return subset
     # -----------------
         
 @xr.register_dataset_accessor("wrf")
