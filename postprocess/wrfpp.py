@@ -43,6 +43,7 @@ except ImportError:
 # the WRF model code (WRF/share/module_model_constants.F). We use SI units for
 # all constants
 constants = dict(
+    g=9.81,  # Acceleration due to gravity (m s-2)**
     pot_temp_t0=300,  # Base state potential temperature (K)**
     pot_temp_p0=1e5,  # Base state surface pressure for potential temp. (Pa)**
     r_air=287,  # Specific gas constant of dry air (J kg-1 K-1)**
@@ -319,6 +320,70 @@ class WRFDatasetAccessor(GenericDatasetAccessor):
 
     """
 
+    # Facilities for destaggering data
+
+    def staggered_dims(self, array):
+        """Return the names of the staggered dimensions in given array.
+
+        Parameters
+        ----------
+        array: xr.DataArray
+            The array to analyze.
+
+        Returns
+        -------
+        (str,)
+            The name of all the dimensions of the array that are staggered.
+
+        """
+        dims = []
+        for dim in ("west_east", "south_north", "bottom_top"):
+            not_staggered = dim in array.dims
+            staggered = "%s_stag" % dim in array.dims
+            if not_staggered and staggered:
+                raise ValueError("Dimension %s present in both forms." % dim)
+            elif staggered:
+                dims.append(dim)
+        return tuple(dims)
+
+    def destagger(self, array, dim=None):
+        """Destagger given array.
+
+        Parameters
+        ----------
+        array: xr.DataArray
+            The array to destagger.
+        dim: "x" | "y" | "z" | None
+            The dimension to destagger. If None, then it is guessed
+            automatically (in which case there must be exactly one staggered
+            dimension in the array).
+
+        Returns
+        -------
+        xr.DataArray
+            The destaggered array.
+
+        """
+        # Determine the only staggered dimension if not specified as argument
+        if dim is None:
+            staggered_dims = self.staggered_dims(array)
+            if len(staggered_dims) != 1:
+                msg = "Array has zero or more than one staggered dimension(s)."
+                raise ValueError(msg)
+            dim = staggered_dims[0]
+        dim_stag = "%s_stag" % dim
+
+        # Prepare the slices for the average
+        idx = array.dims.index(dim_stag)
+        n = array.shape[idx]
+        r = range(len(array.dims))
+        slices_1 = (slice(None) if i != idx else slice(0, n - 1) for i in r)
+        slices_2 = (slice(None) if i != idx else slice(1, n) for i in r)
+
+        # Destagger
+        out = (array[tuple(slices_1)] + array[tuple(slices_2)]) / 2
+        return out.rename({dim_stag: dim})
+
     # Facilities for handling geographical projections
 
     @property
@@ -422,6 +487,11 @@ class WRFDatasetAccessor(GenericDatasetAccessor):
     # Derived variables
 
     @property
+    def geopotential(self):
+        """The DerivedVariable object to calculate geopotential."""
+        return WRFGeopotential(self._dataset)
+
+    @property
     def potential_temperature(self):
         """The DerivedVariable object to calculate potential temperature."""
         return WRFPotentialTemperature(self._dataset)
@@ -430,6 +500,11 @@ class WRFDatasetAccessor(GenericDatasetAccessor):
     def atm_pressure(self):
         """The DerivedVariable object to calculate atmopsheric pressure."""
         return WRFAtmPressure(self._dataset)
+
+    @property
+    def sea_level_pressure(self):
+        """The DerivedVariable object to calculate sea-level pressure."""
+        return WRFSeaLevelPressure(self._dataset)
 
     @property
     def air_temperature(self):
@@ -487,14 +562,7 @@ class DerivedVariable(ABC):
 
     @property
     def values(self):
-        """The values object corresponding to the derived variable.
-
-        Returns
-        -------
-        np.array
-            The values object corresponding to the derived variable.
-
-        """
+        """The values object corresponding to the derived variable."""
         return self[:].values
 
     def __str__(self):
@@ -509,6 +577,52 @@ class DerivedVariable(ABC):
 
         """
         return self[:].__str__()
+
+    # Make instances of this class have the same interface as xr.DataArrays
+
+    @property
+    def dims(self):
+        return self[:].dims
+
+    @property
+    def loc(self):
+        return self[:].loc
+
+    @property
+    def isel(self):
+        return self[:].isel
+
+    @property
+    def sel(self):
+        return self[:].sel
+
+
+class WRFGeopotential(DerivedVariable):
+    """Derived variable for geopotential from WRF outputs."""
+
+    def __getitem__(self, *args):
+        """Return the geopotential.
+
+        Parameters
+        ----------
+        *args: slice
+            Slice of interest in the WRF output.
+
+        Return
+        ------
+        xarray.DataArray
+            The geopotential for given slice, in m2 s-2.
+
+        """
+        varname_ph, varname_phb, expected_units = "PH", "PHB", "m2 s-2"
+        self._dataset.wrf.check_units(varname_ph, expected_units)
+        self._dataset.wrf.check_units(varname_phb, expected_units)
+        return xr.DataArray(
+            self._dataset[varname_ph].__getitem__(*args)
+            + self._dataset[varname_phb].__getitem__(*args),
+            name="geopotential",
+            attrs=dict(long_name="Geopotential", units="m2 s-2"),
+        )
 
 
 class WRFPotentialTemperature(DerivedVariable):
@@ -564,6 +678,110 @@ class WRFAtmPressure(DerivedVariable):
             name="atmospheric pressure",
             attrs=dict(long_name="Atmospheric pressure", units="Pa"),
         )
+
+
+class WRFSeaLevelPressure(DerivedVariable):
+    """Derived variable for sea-level pressure from WRF outputs."""
+
+    def __getitem__(self, *args):
+        """Return the sea-level pressure.
+
+        Parameters
+        ----------
+        *args: slice
+            Slice of interest in the WRF output.
+
+        Return
+        ------
+        xarray.DataArray
+            The sea-level pressure for given slice, in Pa.
+
+        Note
+        ----
+        This method copies the sea-level pressure calculation of the WRF model,
+        cf. subroutine compute_seaprs in (it is duplicated in both files):
+         - var/da/da_verif_grid/da_verif_grid.f90
+         - var/da/da_verif_anal/da_verif_anal.f90
+
+        """
+        wrf = self._dataset.wrf
+        nz = wrf.sizes["bottom_top"]
+
+        # Constant(s)
+        lapse_rate = 0.0065  # in K m-1
+
+        # We find the lowest level that is above above the surface by a
+        # pre-defined threshold. We later use this level to extrapolate a
+        # surface pressure and temperature, which is supposed to reduce the
+        # effect of the diurnal heating cycle in the pressure field
+        p_threshold = 1e4
+        p = wrf.atm_pressure
+        diff = p[:] - (p.isel(bottom_top=0) - p_threshold)
+        idx = diff.bottom_top.where(diff < 0).min(
+            dim="bottom_top", keepdims=True
+        )
+        if np.any(np.isnan(idx)):
+            raise ValueError("Could not find all levels for extrapolation.")
+
+        # Find the indices of the 2 layers that will be used for extrapolating
+        idx_low = np.where(idx > 0, idx - 1, 0).astype(int)
+        idx_high = np.where(idx_low < nz - 2, idx_low + 1, nz - 1).astype(int)
+        if np.any(idx_low == idx_high):
+            raise ValueError("Levels for extrapolation are equal.")
+
+        # Get atmospheric pressure at both levels
+        idim_p = p.dims.index("bottom_top")
+        p_low = np.take_along_axis(p.values, idx_low, axis=idim_p)
+        p_high = np.take_along_axis(p.values, idx_high, axis=idim_p)
+
+        # Get specific humidity at both levels
+        varname_q, units_q = "QVAPOR", "kg kg-1"
+        wrf.check_units(varname_q, units_q)
+        q = wrf[varname_q]
+        idim_q = q.dims.index("bottom_top")
+        q_low = np.take_along_axis(q.values, idx_low, axis=idim_q)
+        q_high = np.take_along_axis(q.values, idx_high, axis=idim_q)
+
+        # Get air temperature at both levels
+        t = wrf.air_temperature.__getitem__(*args)
+        idim_t = t.dims.index("bottom_top")
+        t_low = np.take_along_axis(t[:].values, idx_low, axis=idim_t)
+        t_high = np.take_along_axis(t[:].values, idx_high, axis=idim_t)
+
+        # Calculate the corresponding virtual temperature
+        coeff = constants["mm_dryair"] / constants["mm_water"] - 1
+        t_low *= 1 + coeff * q_low
+        t_high *= 1 + coeff * q_high
+
+        # Get surface elevation at both levels
+        ph = wrf.destagger(wrf.geopotential[:], dim="bottom_top")
+        z = ph.values / constants["g"]
+        idim_z = ph.dims.index("bottom_top")
+        z_low = np.take_along_axis(z, idx_low, axis=idim_z)
+        z_high = np.take_along_axis(z, idx_low, axis=idim_z)
+
+        # Calculate the surface and sea-level temperature
+        slice_bottom = (
+            slice(0, 1) if d == "bottom_top" else slice(None) for d in p.dims
+        )
+        p_bottom = p[tuple(slice_bottom)]
+        p_at_thresh = p_bottom - p_threshold
+        factor = np.log(p_at_thresh / p_high) * np.log(p_low / p_high)
+        t_at_thresh = t_high - (t_high - t_low) * factor
+        z_at_thresh = z_high - (z_high - z_low) * factor
+        exponent = lapse_rate * constants["r_air"] / constants["g"]
+        t_surf = t_at_thresh * (p_bottom / p_at_thresh) ** exponent
+        t_sealevel = t_at_thresh + lapse_rate * z_at_thresh
+
+        # Apply correction to the sea level temperature if both the surface and
+        # sea level temnperatures are too high
+
+        # return xr.DataArray(
+        #     self._dataset[varname_p].__getitem__(*args)
+        #     + self._dataset[varname_pb].__getitem__(*args),
+        #     name="atmospheric pressure",
+        #     attrs=dict(long_name="Atmospheric pressure", units="Pa"),
+        #
 
 
 class WRFAirTemperature(DerivedVariable):
