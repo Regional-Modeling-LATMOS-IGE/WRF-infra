@@ -308,10 +308,12 @@ class GenericDatasetAccessor(ABC):
         return tr.transform(x, y)
 
     # RP WIP ----------
-    def find_nearest_gridpoints(self, lat, lon, nearest_neighbours=True):
+    def find_nearest_gridpoints(self, lat, lon, method="centre"):
+        # Set up
+        allowed = {"centre", "mean", "min", "max"}
+        if method not in allowed:
+            raise ValueError(f"Invalid mode: {method!r}. Expected one of {allowed}.")
         wrf = self._dataset.wrf
-
-        # set up lat/lon arrays
         wrflons, wrflats = wrf["XLONG"].values, wrf["XLAT"].values
         if "Time" in wrf.dims:
             wrflons = wrflons[0]
@@ -325,41 +327,36 @@ class GenericDatasetAccessor(ABC):
         max_dist = np.sqrt(wrf.attrs["DX"]**2+wrf.attrs["DY"]**2)/2
         in_domain = np.amin(dists) <= max_dist
         if not in_domain:
-            raise ValueError(f"Point ({lat}, {lon}) is outside model domain bounds.")
+            raise ValueError(f"Point ({lat}, {lon}) is outside model domain.")
 
         # get index of gridpoint at min(dist) and unravel into i, j inds
         j, i = np.unravel_index(np.argmin(dists), wrflons.shape)
 
         # construct slices for 3x3 grid of surrouding gridpoints
-        if nearest_neighbours:
-            (ny, nx) = wrflons.shape
-            # make sure i,j values are within [0, n]
-            imin, jmin = np.max([0, i-1]), np.max([0, j-1])
-            imax, jmax = np.min([nx, i+2]), np.min([ny, j+2])
-            jslice = slice(jmin, jmax)
-            islice = slice(imin, imax)
-            # extract
-            subset = self._dataset.isel(
-                south_north=jslice, west_east=islice)
-            subset = subset.assign_coords({
-                "south_north": ("south_north", range(jmin,jmax)),
-                "west_east": ("west_east", range(imin,imax)),
-            })
+        (ny, nx) = wrflons.shape
+        # make sure i,j values are within [0, n]
+        imin, jmin = np.max([0, i-1]), np.max([0, j-1])
+        imax, jmax = np.min([nx, i+2]), np.min([ny, j+2])
+        jslice = slice(jmin, jmax)
+        islice = slice(imin, imax)
 
-            if i==0 or i==nx-1 or j==0 or j==ny-1:
-                # point is at the edge of the domain
-                # won't have south_west, west_east of len 3 as expected
-                # pad with NaNs to conserve 3x3 shape
-                subset = subset.reindex(
-                    south_north=range(j-1, j+2),
-                    west_east=range(i-1, i+2),
-                    fill_value=np.nan
-                )
+        # extract
+        subset = self._dataset.isel(
+            south_north=jslice, west_east=islice)
+        subset = subset.assign_coords({
+            "south_north": ("south_north", range(jmin,jmax)),
+            "west_east": ("west_east", range(imin,imax)),
+        })
+        if method=="centre":
+            extracted = self._dataset.isel(south_north=j, west_east=i)
+        elif method=="mean":
+            extracted = subset.mean(dim=["south_north","west_east"])
+        elif method=="min":
+            extracted = subset.min(dim=["south_north","west_east"])
+        elif method=="max":
+            extracted = subset.max(dim=["south_north","west_east"])
 
-        else:
-            subset = self._dataset.isel(south_north=j, west_east=i)
-
-        return subset
+        return extracted
     # -----------------
         
 @xr.register_dataset_accessor("wrf")
