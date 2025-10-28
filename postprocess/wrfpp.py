@@ -313,17 +313,18 @@ class GenericDatasetAccessor(ABC):
 
         # set up lat/lon arrays
         wrflons, wrflats = wrf["XLONG"].values, wrf["XLAT"].values
+        if "Time" in wrf.dims:
+            wrflons = wrflons[0]
+            wrflats = wrflats[0]
         targetlons = lon*np.ones(wrflons.shape)
         targetlats = lat*np.ones(wrflats.shape)
 
-        # calcuate distance between lat/lon and each gridpoint
+        # calcuate distance in m between lat/lon and each gridpoint
         geod = pyproj.Geod(ellps="WGS84")
         _, _, dists = geod.inv(targetlons, targetlats, wrflons, wrflats)
-
-        # if the target is in the domain, min(dists) < 0.5 * grid length
-        dx, dy = wrf.attrs["DX"], wrf.attrs["DY"]
-        min_grid_dist = np.amin([dx, dy])
-        if np.amin(dists) > min_grid_dist/2:
+        max_dist = np.sqrt(wrf.attrs["DX"]**2+wrf.attrs["DY"]**2)/2
+        in_domain = np.amin(dists) <= max_dist
+        if not in_domain:
             raise ValueError(f"Point ({lat}, {lon}) is outside model domain bounds.")
 
         # get index of gridpoint at min(dist) and unravel into i, j inds
