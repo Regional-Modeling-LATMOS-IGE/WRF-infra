@@ -309,7 +309,6 @@ class GenericDatasetAccessor(ABC):
 
     # RP WIP ----------
     def find_nearest_gridpoints(self, lat, lon, nearest_neighbours=True):
-        ## TODO fix code for case where lat/lon on edge of domain
         wrf = self._dataset.wrf
 
         # set up lat/lon arrays
@@ -338,18 +337,21 @@ class GenericDatasetAccessor(ABC):
             imax, jmax = np.min([nx, i+2]), np.min([ny, j+2])
             jslice = slice(jmin, jmax)
             islice = slice(imin, imax)
+            # extract
             subset = self._dataset.isel(
                 south_north=jslice, west_east=islice)
+            subset = subset.assign_coords({
+                "south_north": ("south_north", range(jmin,jmax)),
+                "west_east": ("west_east", range(imin,imax)),
+            })
 
-            if i==0 or i==nx or j==0 or j==ny:
+            if i==0 or i==nx-1 or j==0 or j==ny-1:
                 # point is at the edge of the domain
                 # won't have south_west, west_east of len 3 as expected
                 # pad with NaNs to conserve 3x3 shape
-                # TODO: this is currently not working,
-                #       don't think the if statement is triggering
                 subset = subset.reindex(
-                    south_north=np.arange(j-1, j+2),
-                    west_east=np.arange(i-1, i+2),
+                    south_north=range(j-1, j+2),
+                    west_east=range(i-1, i+2),
                     fill_value=np.nan
                 )
 
