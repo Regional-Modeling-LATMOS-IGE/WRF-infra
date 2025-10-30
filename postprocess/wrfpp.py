@@ -103,6 +103,42 @@ def _units_mpl(units):
             split[i] = "%s$^{%s}$" % (s[: n + 1], s[n + 1 :])
     return " ".join(split)
 
+def _get_nearest_indices(lat, lon, gridlons, gridlats, dx, dy):
+    """Return indices (j, i) of gridpoint nearest to (lon, lat).
+
+    Parameters
+    ----------
+    lat, lon : float or int
+        Target coordinate in degrees.
+    gridlons, gridlats : np.ndarray
+        2D arrays of longitudes and latitudes for the model grid.
+    dx, dy : float
+        Grid spacing in metres.
+
+    Returns
+    -------
+    tuple of int
+        Indices (j, i) of the nearest grid point.
+
+    Raises
+    ------
+    ValueError
+        If the target point lies outside the model domain.
+    """
+    geod = pyproj.Geod(ellps="WGS84")
+    _, _, dists = geod.inv(
+        lon * np.ones(gridlons.shape),
+        lat * np.ones(gridlats.shape),
+        gridlons,
+        gridlats,
+    )
+
+    max_dist = np.sqrt(dx**2 + dy**2) / 2
+    if np.amin(dists) > max_dist:
+        raise ValueError(f"Point ({lat}, {lon}) is outside model domain.")
+
+    j, i = np.unravel_index(np.argmin(dists), gridlons.shape)
+    return j, i
 
 class GenericDatasetAccessor(ABC):
     """Template for xarray dataset accessors.
@@ -339,53 +375,40 @@ class GenericDatasetAccessor(ABC):
             If (lon,lat) is not within the model domain.
 
         """
-        # Set up
         allowed = {"centre", "mean", "min", "max"}
         if method not in allowed:
-            raise ValueError(f"Invalid mode: {method!r}. Expected one of {allowed}.")
-        wrf = self._dataset.wrf
-        wrflons, wrflats = wrf["XLONG"].values, wrf["XLAT"].values
-        if "Time" in wrf.dims:
-            wrflons = wrflons[0]
-            wrflats = wrflats[0]
-        targetlons = lon*np.ones(wrflons.shape)
-        targetlats = lat*np.ones(wrflats.shape)
-
-        # calcuate distance in m between lat/lon and each gridpoint
-        geod = pyproj.Geod(ellps="WGS84")
-        _, _, dists = geod.inv(targetlons, targetlats, wrflons, wrflats)
-        max_dist = np.sqrt(wrf.attrs["DX"]**2+wrf.attrs["DY"]**2)/2
-        in_domain = np.amin(dists) <= max_dist
-        if not in_domain:
-            raise ValueError(f"Point ({lat}, {lon}) is outside model domain.")
-
-        # get index of gridpoint at min(dist) and unravel into i, j inds
-        j, i = np.unravel_index(np.argmin(dists), wrflons.shape)
-
-        # construct slices for 3x3 grid of surrouding gridpoints
-        (ny, nx) = wrflons.shape
-        # make sure i,j values are within [0, n]
-        imin, jmin = np.max([0, i-1]), np.max([0, j-1])
-        imax, jmax = np.min([nx, i+2]), np.min([ny, j+2])
-        jslice = slice(jmin, jmax)
-        islice = slice(imin, imax)
-
-        # extract
-        subset = self._dataset.isel(
-            south_north=jslice, west_east=islice)
-        subset = subset.assign_coords({
-            "south_north": ("south_north", range(jmin,jmax)),
-            "west_east": ("west_east", range(imin,imax)),
-        })
+            raise ValueError(
+                f"Invalid mode: {method!r}. Expected one of {allowed}.")
+        
+        # Get (i,j) indices of model gridpoint containing (lon,lat)
+        wrflons, wrflats = self.get_wrf_coords
+        j, i = _get_nearest_indices(
+            lat, lon, wrflons, wrflats,
+            self._dataset.attrs["DX"],
+            self._dataset.attrs["DY"]
+        )
+        
+        # Extract from model output
         if method=="centre":
             extracted = self._dataset.isel(south_north=j, west_east=i)
-        elif method=="mean":
-            extracted = subset.mean(dim=["south_north","west_east"])
-        elif method=="min":
-            extracted = subset.min(dim=["south_north","west_east"])
-        elif method=="max":
-            extracted = subset.max(dim=["south_north","west_east"])
-
+        else:
+            # make index arrays for 9 nearest points, making sure 0 < i < nx
+            (ny, nx) = wrflons.shape
+            imin, imax = max(0, i-1), min(nx, i+2)
+            jmin, jmax = max(0, j-1), min(ny, j+2)
+            islice = range(imin, imax)
+            jslice = range(jmin, jmax)
+            subset = self._dataset.isel(
+                south_north=jslice, west_east=islice)
+            if method=="mean":
+                extracted = subset.mean(
+                    dim=["south_north","west_east"], keep_attrs=True)
+            elif method=="min":
+                extracted = subset.min(
+                    dim=["south_north","west_east"], keep_attrs=True)
+            elif method=="max":
+                extracted = subset.max(
+                    dim=["south_north","west_east"], keep_attrs=True)
         return extracted
         
 @xr.register_dataset_accessor("wrf")
@@ -498,6 +521,22 @@ class WRFDatasetAccessor(GenericDatasetAccessor):
         else:
             raise ValueError("Unsupported projection: %s." % proj["proj"])
         return crs
+
+    @property
+    def get_wrf_coords(self):
+        """Return the longitude and latitude arrays from the WRF grid.
+
+        Returns
+        -------
+        tuple of np.ndarray
+            The (lon, lat) arrays, with time dimension removed if present.
+        """
+        wrf = self._dataset
+        wrflons, wrflats = wrf["XLONG"].values, wrf["XLAT"].values
+        if "Time" in wrf.dims:
+            wrflons = wrflons[0]
+            wrflats = wrflats[0]
+        return wrflons, wrflats
 
     # Derived variables
 
