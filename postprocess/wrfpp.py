@@ -103,6 +103,7 @@ def _units_mpl(units):
             split[i] = "%s$^{%s}$" % (s[: n + 1], s[n + 1 :])
     return " ".join(split)
 
+
 def _get_nearest_indices(lat, lon, gridlons, gridlats, dx, dy):
     """Return indices (j, i) of gridpoint nearest to (lon, lat).
 
@@ -139,6 +140,7 @@ def _get_nearest_indices(lat, lon, gridlons, gridlats, dx, dy):
 
     j, i = np.unravel_index(np.argmin(dists), gridlons.shape)
     return j, i
+
 
 class GenericDatasetAccessor(ABC):
     """Template for xarray dataset accessors.
@@ -378,39 +380,46 @@ class GenericDatasetAccessor(ABC):
         allowed = {"centre", "mean", "min", "max"}
         if method not in allowed:
             raise ValueError(
-                f"Invalid mode: {method!r}. Expected one of {allowed}.")
-        
+                f"Invalid mode: {method!r}. Expected one of {allowed}."
+            )
+
         # Get (i,j) indices of model gridpoint containing (lon,lat)
         wrflons, wrflats = self.get_wrf_coords
         j, i = _get_nearest_indices(
-            lat, lon, wrflons, wrflats,
+            lat,
+            lon,
+            wrflons,
+            wrflats,
             self._dataset.attrs["DX"],
-            self._dataset.attrs["DY"]
+            self._dataset.attrs["DY"],
         )
-        
+
         # Extract from model output
-        if method=="centre":
+        if method == "centre":
             extracted = self._dataset.isel(south_north=j, west_east=i)
         else:
             # make index arrays for 9 nearest points, making sure 0 < i < nx
             (ny, nx) = wrflons.shape
-            imin, imax = max(0, i-1), min(nx, i+2)
-            jmin, jmax = max(0, j-1), min(ny, j+2)
+            imin, imax = max(0, i - 1), min(nx, i + 2)
+            jmin, jmax = max(0, j - 1), min(ny, j + 2)
             islice = range(imin, imax)
             jslice = range(jmin, jmax)
-            subset = self._dataset.isel(
-                south_north=jslice, west_east=islice)
-            if method=="mean":
+            subset = self._dataset.isel(south_north=jslice, west_east=islice)
+            if method == "mean":
                 extracted = subset.mean(
-                    dim=["south_north","west_east"], keep_attrs=True)
-            elif method=="min":
+                    dim=["south_north", "west_east"], keep_attrs=True
+                )
+            elif method == "min":
                 extracted = subset.min(
-                    dim=["south_north","west_east"], keep_attrs=True)
-            elif method=="max":
+                    dim=["south_north", "west_east"], keep_attrs=True
+                )
+            elif method == "max":
                 extracted = subset.max(
-                    dim=["south_north","west_east"], keep_attrs=True)
+                    dim=["south_north", "west_east"], keep_attrs=True
+                )
         return extracted
-        
+
+
 @xr.register_dataset_accessor("wrf")
 class WRFDatasetAccessor(GenericDatasetAccessor):
     """Accessor for WRF and WRF-Chem outputs.
