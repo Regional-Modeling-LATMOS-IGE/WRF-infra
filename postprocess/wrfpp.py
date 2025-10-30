@@ -307,8 +307,38 @@ class GenericDatasetAccessor(ABC):
         tr = _transformer_from_crs(self.crs, reverse=True)
         return tr.transform(x, y)
 
-    # RP WIP ----------
     def find_nearest_gridpoints(self, lat, lon, method="centre"):
+        """Find 9 nearest gridpoints to a given coordinate (lon,lat)
+        and return either the central gridpoint or a statistic (mean,
+        min, max) over the 3×3 grid, depending on the chosen method.
+
+        Parameters
+        ----------
+        lat : float or int
+            The target latitude value
+        lon : float or int
+            The target longitude value
+        method : {"centre", "mean", "min", "max"}, default="centre"
+            Determines which value to return:
+            - "centre": the gridpoint containing the target coordinate.
+            - "mean": mean value over the 3×3 grid.
+            - "min": minimum value over the 3×3 grid.
+            - "max": maximum value over the 3×3 grid.
+
+        Returns
+        -------
+        xarray.Dataset or xarray.DataArray
+            The data from the extracted gridpoint(s).
+
+        Raises
+        ------
+        ValueError
+            If `method` is not an expected value.
+
+        ValueError
+            If (lon,lat) is not within the model domain.
+
+        """
         # Set up
         allowed = {"centre", "mean", "min", "max"}
         if method not in allowed:
@@ -357,7 +387,6 @@ class GenericDatasetAccessor(ABC):
             extracted = subset.max(dim=["south_north","west_east"])
 
         return extracted
-    # -----------------
         
 @xr.register_dataset_accessor("wrf")
 class WRFDatasetAccessor(GenericDatasetAccessor):
