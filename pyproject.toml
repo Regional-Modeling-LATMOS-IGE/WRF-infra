@@ -1,7 +1,13 @@
 [project]
 
 requires-python = ">= 3.13"
+# We restrict GCC to versions lower than 15. GCC v15 enforces the new C23
+# standard, and until recently some of the WRF files did not follow this
+# standard (compilation fails in this case). If we want to be able to compile
+# reasonably old versions of WRF, we need to keep using GCC<15 for now,
+# cf. https://github.com/Regional-Modeling-LATMOS-IGE/WRF-Chem-Polar/issues/56.
 dependencies = [
+    "gcc<15",
     "gfortran",
     "openmpi",
     "netcdf-fortran",

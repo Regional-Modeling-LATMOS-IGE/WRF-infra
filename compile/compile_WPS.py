@@ -28,7 +28,7 @@ def prepare_environment_variables(opts):
     env_vars = dict(
         NETCDF="$NETCDF_FORTRAN_ROOT",
         HDF5="$HDF5_ROOT",
-        WRF_DIR=cms.process_path(opts.wrf_dir),
+        WRF_DIR=cms.process_path(opts.wrfdir),
     )
     format_ = lambda v: str(v) if isinstance(v, int) else '"%s"' % v
     return ["export %s=%s" % (k, format_(v)) for k, v in env_vars.items()]
@@ -61,7 +61,7 @@ def write_job_script(opts):
         env = [line.strip() for line in f.readlines()]
     lines += [line for line in env if line != "" and not line.startswith("#")]
     lines += prepare_environment_variables(opts)
-    setup = dict(spirit=1)[host]
+    setup = dict(spirit=1 + opts.parallel)[host]
 
     # Add the call to ./configure and ./compile
     lines.append('echo -e "%d" | \\' % setup)

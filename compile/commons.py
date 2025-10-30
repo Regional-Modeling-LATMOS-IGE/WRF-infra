@@ -259,9 +259,15 @@ def prepare_argparser(which):
     # "which"-dependent command-line arguments
     if which == "WPS":
         parser.add_argument(
-            "--wrf-dir",
+            "--wrfdir",
             help="Directory where WRF is installed.",
             default="./WRF",
+        )
+        parser.add_argument(
+            "--parallel",
+            help="Whether to compile with support for parallel computing.",
+            action=ConvertToBoolean,
+            default=True,
         )
     elif which == "WRF":
         parser.add_argument(
@@ -365,6 +371,8 @@ def prepare_slurm_options(time):
     slurm = {
         "ntasks": "1",
         "ntasks-per-node": "1",
+        "output": "compile.log",
+        "error": "compile.log",
         "time": time,
     }
     if host == "spirit":
