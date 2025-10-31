@@ -1,10 +1,8 @@
-"""Common resources for compilation scripts.
+# Copyright (c) 2025 LATMOS (France, UMR 8190) and IGE (France, UMR 5001).
+#
+# License: BSD 3-clause "new" or "revised" license (BSD-3-Clause).
 
-Copyright (c) 2025 LATMOS (France, UMR 8190) and IGE (France, UMR 5001).
-
-License: BSD 3-clause "new" or "revised" license (BSD-3-Clause).
-
-"""
+"""Common resources for compilation scripts."""
 
 import os
 import functools

@@ -30,6 +30,9 @@ wrfpp = [
 dev = [
     "ruff"
 ]
+data = [
+    "copernicusmarine"
+]
 
 [tool.black]
 
