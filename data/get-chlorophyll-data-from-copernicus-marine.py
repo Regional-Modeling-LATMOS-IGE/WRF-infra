@@ -38,11 +38,6 @@ parser.add_argument(
     required=True,
 )
 parser.add_argument(
-    "--filename",
-    help="Name of the output file (auto-generated if not specified).",
-    default="",
-)
-parser.add_argument(
     "--temporal-resolution",
     help="Temporal resolution of the downloaded data.",
     choices=("monthly", "daily"),
@@ -52,14 +47,6 @@ args = parser.parse_args()
 
 start = datetime.datetime.strptime(args.start, "%Y-%m-%d")
 end = datetime.datetime.strptime(args.end, "%Y-%m-%d")
-
-if args.filename.strip() == "":
-    args.filename = "copernicus-marine_total-chlorophyll_%s-%s_%s.nc" % (
-        args.start,
-        args.end,
-        args.temporal_resolution,
-    )
-
 temporal_resolution = args.temporal_resolution[0].upper()
 
 # Ask user for Copernicus Marine credentials if needed
@@ -92,5 +79,4 @@ info = copernicusmarine.subset(
     end_datetime=end.strftime("%Y-%m-%dT23:59:59"),
     minimum_depth=depth_first_layer,
     maximum_depth=depth_first_layer,
-    output_filename=args.filename,
 )
