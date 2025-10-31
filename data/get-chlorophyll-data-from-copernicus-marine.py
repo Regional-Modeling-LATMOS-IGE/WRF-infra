@@ -28,14 +28,10 @@ parser = argparse.ArgumentParser(
     formatter_class=argparse.RawDescriptionHelpFormatter,
 )
 parser.add_argument(
-    "--start",
-    help="Start date (format YYYY-MM-DD).",
+    "--year",
+    help="Year of interest.",
     required=True,
-)
-parser.add_argument(
-    "--end",
-    help="End date, included (format YYYY-MM-DD).",
-    required=True,
+    type=int,
 )
 parser.add_argument(
     "--temporal-resolution",
@@ -45,8 +41,8 @@ parser.add_argument(
 )
 args = parser.parse_args()
 
-start = datetime.datetime.strptime(args.start, "%Y-%m-%d")
-end = datetime.datetime.strptime(args.end, "%Y-%m-%d")
+start = datetime.datetime(args.year, 1, 1)
+end = datetime.datetime(args.year, 12, 31)
 temporal_resolution = args.temporal_resolution[0].upper()
 
 # Ask user for Copernicus Marine credentials if needed
