@@ -22,6 +22,6 @@ jobs:
           version: "latest"
           args: "--version"
       - name: Run Ruff (check)
-        run: ruff check --diff postprocess
+        run: ruff check --diff data postprocess
       - name: Run Ruff (format)
-        run: ruff format --diff postprocess
+        run: ruff format --diff data postprocess
