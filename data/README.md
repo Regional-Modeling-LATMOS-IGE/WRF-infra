@@ -4,12 +4,12 @@ In our workflow, these data are used in the WPS step to add oceanic surface-leve
 
 They are downloaded from the [Copernicus Marine service](https://marine.copernicus.eu/). You must have an account there to download data.
 
-Only two parameters are required to download these data: the start and end date of the period of interest (format YYYY-MM-DD).
+Only one parameter is required to download these data: the year of interest (the script downloads one year of data at a time).
 
-For example, to download data for the entire year 2015:
+For example, to download data for the year 2015:
 
 ```sh
-python get-chlorophyll-data-from-copernicus-marine.py --start=2015-01-01 --end=2015-12-31
+python get-chlorophyll-data-from-copernicus-marine.py --year=2015
 ```
 
 For more documentation:
