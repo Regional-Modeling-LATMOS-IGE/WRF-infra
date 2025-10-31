@@ -77,7 +77,7 @@ if not os.path.exists(credentials_file):
     )
     copernicusmarine.login()
 
-# Extract the data
+# Download the data
 
 depth_first_layer = 0.5057600140571594
 
