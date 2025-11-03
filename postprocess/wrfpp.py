@@ -724,7 +724,7 @@ class WRFGridCellArea(DerivedVariable):
         dx = wrf.attrs["DX"]
         dy = wrf.attrs["DY"]
         mapfrac_m = wrf["MAPFAC_M"].__getitem__(*args)
-        grid_cell_area = dx * dy * (mapfrac_m * mapfrac_m)
+        grid_cell_area = dx * dy / (mapfrac_m * mapfrac_m)
         return xr.DataArray(
             grid_cell_area,
             name="grid cell area",
