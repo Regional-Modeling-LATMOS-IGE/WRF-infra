@@ -104,7 +104,7 @@ def _units_mpl(units):
     return " ".join(split)
 
 
-def _get_nearest_indices(lat, lon, gridlons, gridlats, dx, dy):
+def _get_nearest_indices(lon, lat, gridlons, gridlats, dx, dy):
     """Return indices (j, i) of gridpoint nearest to (lon, lat).
 
     Parameters
@@ -345,7 +345,7 @@ class GenericDatasetAccessor(ABC):
         tr = _transformer_from_crs(self.crs, reverse=True)
         return tr.transform(x, y)
 
-    def value_around_point(self, lat, lon, method="centre"):
+    def value_around_point(self, lon, lat, method="centre"):
         """Return dataset around given location.
 
         Find 9 nearest gridpoints to a given coordinate (lon,lat)
@@ -388,8 +388,8 @@ class GenericDatasetAccessor(ABC):
         # Get (i,j) indices of model gridpoint containing (lon,lat)
         wrflons, wrflats = self.lonlat
         j, i = _get_nearest_indices(
-            lat,
             lon,
+            lat,
             wrflons,
             wrflats,
             self._dataset.attrs["DX"],
