@@ -14,10 +14,10 @@ lon_nuuk = -51.7361
 lat_nuuk = 64.1767
 x_nuuk, y_nuuk = ds.wrf.ll2xy(lon_nuuk, lat_nuuk)
 
-# Extract the model gridpoint closest to Nuuk..
-wrf_nuuk = ds.wrf.find_nearest_gridpoints(lat_nuuk, lon_nuuk)
+# Extract data from the model gridpoint closest to Nuuk..
+wrf_nuuk = ds.wrf.value_around_point(lon_nuuk, lat_nuuk)
 # ..or the mean of the 9 nearest gridpoints
-wrf_nuuk = ds.wrf.find_nearest_gridpoints(lat_nuuk, lon_nuuk, method="mean")
+wrf_nuuk = ds.wrf.value_around_point(lon_nuuk, lat_nuuk, method="mean")
 
 # Access derived variables
 temperature = ds.wrf.air_temperature[:10, 0, :, :]
