@@ -345,8 +345,10 @@ class GenericDatasetAccessor(ABC):
         tr = _transformer_from_crs(self.crs, reverse=True)
         return tr.transform(x, y)
 
-    def find_nearest_gridpoints(self, lat, lon, method="centre"):
-        """Find 9 nearest gridpoints to a given coordinate (lon,lat)
+    def value_around_point(self, lat, lon, method="centre"):
+        """Return dataset around given location.
+
+        Find 9 nearest gridpoints to a given coordinate (lon,lat)
         and return either the central gridpoint or a statistic (mean,
         min, max) over the 3×3 grid, depending on the chosen method.
 
@@ -384,7 +386,7 @@ class GenericDatasetAccessor(ABC):
             )
 
         # Get (i,j) indices of model gridpoint containing (lon,lat)
-        wrflons, wrflats = self.get_wrf_coords
+        wrflons, wrflats = self.lonlat
         j, i = _get_nearest_indices(
             lat,
             lon,
@@ -532,7 +534,7 @@ class WRFDatasetAccessor(GenericDatasetAccessor):
         return crs
 
     @property
-    def get_wrf_coords(self):
+    def lonlat(self):
         """Return the longitude and latitude arrays from the WRF grid.
 
         Returns
@@ -541,11 +543,11 @@ class WRFDatasetAccessor(GenericDatasetAccessor):
             The (lon, lat) arrays, with time dimension removed if present.
         """
         wrf = self._dataset
-        wrflons, wrflats = wrf["XLONG"].values, wrf["XLAT"].values
+        lons, lats = wrf["XLONG"].values, wrf["XLAT"].values
         if "Time" in wrf.dims:
-            wrflons = wrflons[0]
-            wrflats = wrflats[0]
-        return wrflons, wrflats
+            lons = lons[0]
+            lats = lats[0]
+        return lons, lats
 
     # Derived variables
 
