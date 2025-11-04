@@ -367,7 +367,7 @@ class GenericDatasetAccessor(ABC):
 
         Returns
         -------
-        xarray.Dataset or xarray.DataArray
+        xarray.Dataset
             The data from the extracted gridpoint(s).
 
         Raises
