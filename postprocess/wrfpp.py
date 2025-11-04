@@ -104,7 +104,7 @@ def _units_mpl(units):
     return " ".join(split)
 
 
-def _get_nearest_indices(lon, lat, gridlons, gridlats, dx, dy):
+def nearest_indices(lon, lat, gridlons, gridlats, dx, dy):
     """Return indices (j, i) of gridpoint nearest to (lon, lat).
 
     Parameters
@@ -128,8 +128,8 @@ def _get_nearest_indices(lon, lat, gridlons, gridlats, dx, dy):
     """
     geod = pyproj.Geod(ellps="WGS84")
     _, _, dists = geod.inv(
-        lon * np.ones(gridlons.shape),
-        lat * np.ones(gridlats.shape),
+        np.full(gridlons.shape, lon),
+        np.full(gridlats.shape, lat),
         gridlons,
         gridlats,
     )
@@ -492,6 +492,8 @@ class WRFDatasetAccessor(GenericDatasetAccessor):
             - "mean": mean value over the 3×3 grid.
             - "min": minimum value over the 3×3 grid.
             - "max": maximum value over the 3×3 grid.
+        NB: in cases where (lon,lat) is on an edge or corner of the domain,
+        method=mean/min/max will be calculated over only 6 or 4 gridpoints.
 
         Returns
         -------
@@ -515,7 +517,7 @@ class WRFDatasetAccessor(GenericDatasetAccessor):
 
         # Get (i,j) indices of model gridpoint containing (lon,lat)
         wrflons, wrflats = self.lonlat
-        j, i = _get_nearest_indices(
+        j, i = nearest_indices(
             lon,
             lat,
             wrflons,
@@ -535,18 +537,9 @@ class WRFDatasetAccessor(GenericDatasetAccessor):
             islice = range(imin, imax)
             jslice = range(jmin, jmax)
             subset = self._dataset.isel(south_north=jslice, west_east=islice)
-            if method == "mean":
-                extracted = subset.mean(
-                    dim=["south_north", "west_east"], keep_attrs=True
-                )
-            elif method == "min":
-                extracted = subset.min(
-                    dim=["south_north", "west_east"], keep_attrs=True
-                )
-            elif method == "max":
-                extracted = subset.max(
-                    dim=["south_north", "west_east"], keep_attrs=True
-                )
+            extracted = getattr(subset, method)(
+                dim=["south_north", "west_east"], keep_attrs=True
+            )
         return extracted
 
     # Derived variables
