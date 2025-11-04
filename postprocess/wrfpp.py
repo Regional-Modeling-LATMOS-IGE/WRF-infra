@@ -345,82 +345,6 @@ class GenericDatasetAccessor(ABC):
         tr = _transformer_from_crs(self.crs, reverse=True)
         return tr.transform(x, y)
 
-    def value_around_point(self, lon, lat, method="centre"):
-        """Return dataset around given location.
-
-        Find 9 nearest gridpoints to a given coordinate (lon,lat)
-        and return either the central gridpoint or a statistic (mean,
-        min, max) over the 3×3 grid, depending on the chosen method.
-
-        Parameters
-        ----------
-        lat : float or int
-            The target latitude value
-        lon : float or int
-            The target longitude value
-        method : {"centre", "mean", "min", "max"}, default="centre"
-            Determines which value to return:
-            - "centre": the gridpoint containing the target coordinate.
-            - "mean": mean value over the 3×3 grid.
-            - "min": minimum value over the 3×3 grid.
-            - "max": maximum value over the 3×3 grid.
-
-        Returns
-        -------
-        xarray.Dataset
-            The data from the extracted gridpoint(s).
-
-        Raises
-        ------
-        ValueError
-            If `method` is not an expected value.
-
-        ValueError
-            If (lon,lat) is not within the model domain.
-
-        """
-        allowed = {"centre", "mean", "min", "max"}
-        if method not in allowed:
-            raise ValueError(
-                f"Invalid mode: {method!r}. Expected one of {allowed}."
-            )
-
-        # Get (i,j) indices of model gridpoint containing (lon,lat)
-        wrflons, wrflats = self.lonlat
-        j, i = _get_nearest_indices(
-            lon,
-            lat,
-            wrflons,
-            wrflats,
-            self._dataset.attrs["DX"],
-            self._dataset.attrs["DY"],
-        )
-
-        # Extract from model output
-        if method == "centre":
-            extracted = self._dataset.isel(south_north=j, west_east=i)
-        else:
-            # make index arrays for 9 nearest points, making sure 0 < i < nx
-            (ny, nx) = wrflons.shape
-            imin, imax = max(0, i - 1), min(nx, i + 2)
-            jmin, jmax = max(0, j - 1), min(ny, j + 2)
-            islice = range(imin, imax)
-            jslice = range(jmin, jmax)
-            subset = self._dataset.isel(south_north=jslice, west_east=islice)
-            if method == "mean":
-                extracted = subset.mean(
-                    dim=["south_north", "west_east"], keep_attrs=True
-                )
-            elif method == "min":
-                extracted = subset.min(
-                    dim=["south_north", "west_east"], keep_attrs=True
-                )
-            elif method == "max":
-                extracted = subset.max(
-                    dim=["south_north", "west_east"], keep_attrs=True
-                )
-        return extracted
-
 
 @xr.register_dataset_accessor("wrf")
 class WRFDatasetAccessor(GenericDatasetAccessor):
@@ -548,6 +472,82 @@ class WRFDatasetAccessor(GenericDatasetAccessor):
             lons = lons[0]
             lats = lats[0]
         return lons, lats
+
+    def value_around_point(self, lon, lat, method="centre"):
+        """Return dataset around given location.
+
+        Find 9 nearest gridpoints to a given coordinate (lon,lat)
+        and return either the central gridpoint or a statistic (mean,
+        min, max) over the 3×3 grid, depending on the chosen method.
+
+        Parameters
+        ----------
+        lat : float or int
+            The target latitude value
+        lon : float or int
+            The target longitude value
+        method : {"centre", "mean", "min", "max"}, default="centre"
+            Determines which value to return:
+            - "centre": the gridpoint containing the target coordinate.
+            - "mean": mean value over the 3×3 grid.
+            - "min": minimum value over the 3×3 grid.
+            - "max": maximum value over the 3×3 grid.
+
+        Returns
+        -------
+        xarray.Dataset
+            The data from the extracted gridpoint(s).
+
+        Raises
+        ------
+        ValueError
+            If `method` is not an expected value.
+
+        ValueError
+            If (lon,lat) is not within the model domain.
+
+        """
+        allowed = {"centre", "mean", "min", "max"}
+        if method not in allowed:
+            raise ValueError(
+                f"Invalid mode: {method!r}. Expected one of {allowed}."
+            )
+
+        # Get (i,j) indices of model gridpoint containing (lon,lat)
+        wrflons, wrflats = self.lonlat
+        j, i = _get_nearest_indices(
+            lon,
+            lat,
+            wrflons,
+            wrflats,
+            self._dataset.attrs["DX"],
+            self._dataset.attrs["DY"],
+        )
+
+        # Extract from model output
+        if method == "centre":
+            extracted = self._dataset.isel(south_north=j, west_east=i)
+        else:
+            # make index arrays for 9 nearest points, making sure 0 < i < nx
+            (ny, nx) = wrflons.shape
+            imin, imax = max(0, i - 1), min(nx, i + 2)
+            jmin, jmax = max(0, j - 1), min(ny, j + 2)
+            islice = range(imin, imax)
+            jslice = range(jmin, jmax)
+            subset = self._dataset.isel(south_north=jslice, west_east=islice)
+            if method == "mean":
+                extracted = subset.mean(
+                    dim=["south_north", "west_east"], keep_attrs=True
+                )
+            elif method == "min":
+                extracted = subset.min(
+                    dim=["south_north", "west_east"], keep_attrs=True
+                )
+            elif method == "max":
+                extracted = subset.max(
+                    dim=["south_north", "west_east"], keep_attrs=True
+                )
+        return extracted
 
     # Derived variables
 
