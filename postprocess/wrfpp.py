@@ -104,6 +104,44 @@ def _units_mpl(units):
     return " ".join(split)
 
 
+def nearest_indices(lon, lat, gridlons, gridlats, dx, dy):
+    """Return indices (j, i) of gridpoint nearest to (lon, lat).
+
+    Parameters
+    ----------
+    lat, lon : float or int
+        Target coordinate in degrees.
+    gridlons, gridlats : np.ndarray
+        2D arrays of longitudes and latitudes for the model grid.
+    dx, dy : float
+        Grid spacing in metres.
+
+    Returns
+    -------
+    tuple of int
+        Indices (j, i) of the nearest grid point.
+
+    Raises
+    ------
+    ValueError
+        If the target point lies outside the model domain.
+    """
+    geod = pyproj.Geod(ellps="WGS84")
+    _, _, dists = geod.inv(
+        np.full(gridlons.shape, lon),
+        np.full(gridlats.shape, lat),
+        gridlons,
+        gridlats,
+    )
+
+    max_dist = np.sqrt(dx**2 + dy**2) / 2
+    if np.amin(dists) > max_dist:
+        raise ValueError(f"Point ({lat}, {lon}) is outside model domain.")
+
+    j, i = np.unravel_index(np.argmin(dists), gridlons.shape)
+    return j, i
+
+
 class GenericDatasetAccessor(ABC):
     """Template for xarray dataset accessors.
 
@@ -418,6 +456,91 @@ class WRFDatasetAccessor(GenericDatasetAccessor):
         else:
             raise ValueError("Unsupported projection: %s." % proj["proj"])
         return crs
+
+    @property
+    def lonlat(self):
+        """Return the longitude and latitude arrays from the WRF grid.
+
+        Returns
+        -------
+        tuple of np.ndarray
+            The (lon, lat) arrays, with time dimension removed if present.
+        """
+        wrf = self._dataset
+        lons, lats = wrf["XLONG"].values, wrf["XLAT"].values
+        if "Time" in wrf.dims:
+            lons = lons[0]
+            lats = lats[0]
+        return lons, lats
+
+    def value_around_point(self, lon, lat, method="centre"):
+        """Return dataset around given location.
+
+        Find 9 nearest gridpoints to a given coordinate (lon,lat)
+        and return either the central gridpoint or a statistic (mean,
+        min, max) over the 3×3 grid, depending on the chosen method.
+
+        Parameters
+        ----------
+        lat : float or int
+            The target latitude value
+        lon : float or int
+            The target longitude value
+        method : {"centre", "mean", "min", "max"}, default="centre"
+            Determines which value to return:
+            - "centre": the gridpoint containing the target coordinate.
+            - "mean": mean value over the 3×3 grid.
+            - "min": minimum value over the 3×3 grid.
+            - "max": maximum value over the 3×3 grid.
+        NB: in cases where (lon,lat) is on an edge or corner of the domain,
+        method=mean/min/max will be calculated over only 6 or 4 gridpoints.
+
+        Returns
+        -------
+        xarray.Dataset
+            The data from the extracted gridpoint(s).
+
+        Raises
+        ------
+        ValueError
+            If `method` is not an expected value.
+
+        ValueError
+            If (lon,lat) is not within the model domain.
+
+        """
+        allowed = {"centre", "mean", "min", "max"}
+        if method not in allowed:
+            raise ValueError(
+                f"Invalid mode: {method!r}. Expected one of {allowed}."
+            )
+
+        # Get (i,j) indices of model gridpoint containing (lon,lat)
+        wrflons, wrflats = self.lonlat
+        j, i = nearest_indices(
+            lon,
+            lat,
+            wrflons,
+            wrflats,
+            self._dataset.attrs["DX"],
+            self._dataset.attrs["DY"],
+        )
+
+        # Extract from model output
+        if method == "centre":
+            extracted = self._dataset.isel(south_north=j, west_east=i)
+        else:
+            # make index arrays for 9 nearest points, making sure 0 < i < nx
+            (ny, nx) = wrflons.shape
+            imin, imax = max(0, i - 1), min(nx, i + 2)
+            jmin, jmax = max(0, j - 1), min(ny, j + 2)
+            islice = range(imin, imax)
+            jslice = range(jmin, jmax)
+            subset = self._dataset.isel(south_north=jslice, west_east=islice)
+            extracted = getattr(subset, method)(
+                dim=["south_north", "west_east"], keep_attrs=True
+            )
+        return extracted
 
     # Derived variables
 
