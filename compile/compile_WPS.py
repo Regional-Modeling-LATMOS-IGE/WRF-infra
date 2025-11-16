@@ -81,9 +81,9 @@ if __name__ == "__main__":
 
     cms.clone_and_checkout(opts)
     cms.write_options(opts)
+    write_job_script(opts)
     cms.process_patches(opts)
     cms.process_extra_sources(opts)
-    write_job_script(opts)
 
     if opts.dry:
         sys.exit(0)
