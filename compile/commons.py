@@ -193,7 +193,9 @@ def prepare_argparser(which):
     if which == "WPS":
         repository = URL_WPS
         commit = "master"
-        patches = os.path.join(path_of_repo(), "compile", "patches_WPS")
+        patches = os.path.join(
+            path_of_repo(), "compile", "patches", "WPS", "v4.6.0"
+        )
     elif which == "WRF":
         repository = URL_WRFCHEMPOLAR
         commit = "polar/main"
