@@ -1,0 +1,29 @@
+--- makefile	2025-11-16 15:38:14.231379628 +0100
++++ makefile.new	2025-11-16 15:39:36.234118242 +0100
+@@ -30,7 +30,7 @@
+ 	fi
+ 
+ io_int.o: io_int.f ../../inc/intio_tags.h
+-	$(FC) $(FCFLAGS) -I../../inc -I../ioapi_share -o $@ -c $*.f
++	$(FC) -fallow-argument-mismatch $(FCFLAGS) -I../../inc -I../ioapi_share -o $@ -c $*.f
+ 
+ io_int_idx_tags.h: ../../inc/intio_tags.h
+ 	awk '{print "#define", toupper($$4), $$6}' < ../../inc/intio_tags.h > $@
+@@ -42,7 +42,7 @@
+ 	$(FC) $(FCFLAGS) -o $@ -c $*.f90
+ 
+ module_io_int_read.o: module_io_int_read.f module_io_int_idx.o
+-	$(FC) $(FCFLAGS) -I../../frame -o $@ -c $*.f
++	$(FC) -fallow-argument-mismatch $(FCFLAGS) -I../../frame -o $@ -c $*.f
+ 
+ module_io_int_read.f: module_io_int_read.F90
+ 	$(CPP1) $(ARCHFLAGS) $*.F90 > $@
+@@ -56,7 +56,7 @@
+ 	$(RM) mod_int_hdr_util.b
+ 
+ module_internal_header_util.o: module_internal_header_util.f
+-	$(FC) $(FCFLAGS) -o $@ -c $*.f
++	$(FC) -fallow-argument-mismatch $(FCFLAGS) -o $@ -c $*.f
+ 
+ diffwrf.f: diffwrf.F90 io_int.o
+ 	if [ `echo "$(FC)" | awk '{print $$1}'` = "gfortran" ] ; then \

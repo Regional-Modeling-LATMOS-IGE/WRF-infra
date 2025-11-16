@@ -1,0 +1,11 @@
+--- module_mp_morr_two_moment.F	2025-11-16 15:48:18.160116330 +0100
++++ module_mp_morr_two_moment.F.new	2025-11-16 15:49:06.241379925 +0100
+@@ -861,7 +861,7 @@
+ !Ideally, the code should not calculate SR when SNOWRT1D is too small. I'm also
+ !still not sure if this is not related to another bug leading to negative
+ !SNOWRT1D
+-      SR(i,j) = min(1,max(0,SNOWRT1D/(PRECPRT1D+1.E-12)))
++      SR(i,j) = min(1.0,max(0.0,SNOWRT1D/(PRECPRT1D+1.E-12)))
+ !lm
+ 
+ !+---+-----------------------------------------------------------------+

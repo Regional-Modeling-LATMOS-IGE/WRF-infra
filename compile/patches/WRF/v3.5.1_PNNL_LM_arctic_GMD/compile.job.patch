@@ -1,0 +1,11 @@
+--- compile.job	2025-11-16 15:16:21.001596974 +0100
++++ compile.job.new	2025-11-16 15:18:08.491939832 +0100
+@@ -20,6 +20,7 @@
+ export WRF_KPP=1
+ export FLEX_LIB_DIR="/usr/lib/x86_64-linux-gnu"
+ export YACC="byacc -d"
+-echo -e "34\n1" | \
++echo -e "42\n1" | \
+ $CONDA_RUN ./configure kpp chem
++sed -i "s/^DM_FC[[:space:]]*=[[:space:]]*mpif90[[:space:]]*\$/DM_FC = mpif90 -fallow-argument-mismatch -fallow-invalid-boz/g" configure.wrf
+ $CONDA_RUN ./compile em_real
