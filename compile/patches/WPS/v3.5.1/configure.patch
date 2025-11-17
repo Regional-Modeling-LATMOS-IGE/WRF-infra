@@ -1,0 +1,16 @@
+--- configure	2025-11-17 11:20:14.204978118 +0100
++++ configure.new	2025-11-17 11:38:20.094182189 +0100
+@@ -117,10 +117,10 @@
+ 
+ if [ -n "$NETCDF" ] ; then
+   echo "Will use NETCDF in dir: $NETCDF"
+-  # for 3.6.2 and greater there might be a second library, libnetcdff.a .  Check for this and use
+-  # if available
++  # for 3.6.2 and greater there might be a second library
++  # (libnetcdff.a and/or libnetcdff.so). Check for this and use if available
+   NETCDFF=" "
+-  if [ -f "$NETCDF/lib/libnetcdff.a" ] ; then
++  if [ -f "$NETCDF/lib/libnetcdff.a" ] || [ -f "$NETCDF/lib/libnetcdff.so" ] ; then
+     NETCDFF="-lnetcdff"
+   fi
+ else
