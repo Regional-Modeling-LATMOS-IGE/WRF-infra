@@ -90,7 +90,7 @@ Notes:
 import sys
 if sys.version_info.major < 3:
     raise RuntimeError("Please use Python 3!")
-from os.path import join
+from os.path import join, basename
 from argparse import ArgumentParser, RawDescriptionHelpFormatter as Formatter
 from itertools import product
 from collections import namedtuple
@@ -299,6 +299,23 @@ def ll2xy_wrf(nc):
         raise NotImplementedError('Projection type "%s" not supported.' % proj)
     return pyproj.Transformer.from_crs(crs.geodetic_crs, crs).transform
 
+def wps_version(nc):
+    """Return the version of WPS used to create the wrfinput file.
+
+    Parameter "nc" is the handle to the wrfinput file, which must already be
+    opened. The WPS version number is read from the global attributes of this
+    file.
+
+    """
+    title = nc.getncattr("TITLE")
+    start, end = " OUTPUT FROM REAL_EM ", " PREPROCESSOR"
+    if not title.startswith(start) or not title.endswith(end):
+        raise ValueError("Could not parse the TITLE attribute: %s." % title)
+    version = title[len(start):-len(end)]
+    if not version.startswith("V"):
+        raise ValueError("This version number seems wrong: %s." % version)
+    return version
+
 def get_wrf_emissions_file(domain, time, ncs, nc_grid):
     """Return handle to opened WRF emissions file (create it if needed).
 
@@ -328,7 +345,11 @@ def get_wrf_emissions_file(domain, time, ncs, nc_grid):
         for attr in ("DX", "DY", "CEN_LAT", "CEN_LON", "TRUELAT1", "TRUELAT2",
                      "MOAD_CEN_LAT", "MAP_PROJ", "MMINLU"):
             setattr(nc, attr, getattr(nc_grid, attr))
-        nc.TITLE = "Created by " + __file__ + " on " + str(datetime.today())
+        nc.TITLE = "Created by %s for WRF %s on %s" % (
+            basename(__file__),
+            wps_version(nc_grid),
+            str(datetime.today())
+        )
         var = nc.createVariable("Times", "c", ("Time", "DateStrLen"))
         var.datetime_format = "%Y-%m-%d_%H:%M:%S"
         var[0,:] = time_f
