@@ -345,10 +345,10 @@ def get_wrf_emissions_file(domain, time, ncs, nc_grid):
         for attr in ("DX", "DY", "CEN_LAT", "CEN_LON", "TRUELAT1", "TRUELAT2",
                      "MOAD_CEN_LAT", "MAP_PROJ", "MMINLU"):
             setattr(nc, attr, getattr(nc_grid, attr))
-        nc.TITLE = "Created by %s for WRF %s on %s" % (
+        nc.TITLE = "Created by {0} for WRF {1} on {2}".format(
             basename(__file__),
             wps_version(nc_grid),
-            str(datetime.today())
+            str(datetime.today()),
         )
         var = nc.createVariable("Times", "c", ("Time", "DateStrLen"))
         var.datetime_format = "%Y-%m-%d_%H:%M:%S"
