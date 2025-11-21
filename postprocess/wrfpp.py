@@ -462,6 +462,21 @@ class WRFDatasetAccessor(GenericDatasetAccessor):
         """The DerivedVariable object to calculate grid cell hight above ground level."""
         return WRFAltitudeAGL(self._dataset)
 
+    @property
+    def altitude_asl_c(self):
+        """The DerivedVariable object to calculate grid cell hight center above sea level."""
+        return WRFAltitudeASL_C(self._dataset)
+
+    @property
+    def altitude_agl_c(self):
+        """The DerivedVariable object to calculate grid cell hight center above ground level."""
+        return WRFAltitudeAGL_C(self._dataset)
+
+    @property
+    def box_height(self):
+        """The DerivedVariable object to calculate grid box height."""
+        return WRFBoxHeight(self._dataset)
+
 
 class DerivedVariable(ABC):
     """Abstract class to define derived variables.
@@ -764,4 +779,105 @@ class WRFAltitudeAGL(DerivedVariable):
             alt,
             name="Altitude above ground level",
             attrs=dict(long_name="Altitude above ground level", units="m"),
+        )
+
+
+class WRFAltitudeASL_C(DerivedVariable):
+    """The DerivedVariable object to calculate grid centerpoint altitude above sea level."""
+
+    def __getitem__(self, *args):
+        """Return the the grid cell centerpoint altitude above sea level
+
+        Parameters
+        ----------
+        *args: slice
+            Slice of interest in the WRF output.
+
+        Return
+        ------
+        xarray.DataArray
+            The grid cell centerpoint altitude above sea level in meters.
+
+        """
+        wrf = self._dataset.wrf
+        alt = wrf.altitude_asl.__getitem__(*args)
+        alt_center = (
+            alt[:].isel(bottom_top_stag=slice(None, -1))
+            + alt[:].isel(bottom_top_stag=slice(1, None))
+        ) / 2.0
+        alt_center = alt_center.rename({"bottom_top_stag": "bottom_top"})
+        return xr.DataArray(
+            alt_center,
+            name="Altitude grid box centerpoint above sea level",
+            attrs=dict(
+                long_name="Altitude grid box centerpoint above sea level",
+                units="m",
+            ),
+        )
+
+
+class WRFAltitudeAGL_C(DerivedVariable):
+    """The DerivedVariable object to calculate grid centerpoint altitude above ground level."""
+
+    def __getitem__(self, *args):
+        """Return the the grid cell centerpoint altitude ground sea level
+
+        Parameters
+        ----------
+        *args: slice
+            Slice of interest in the WRF output.
+
+        Return
+        ------
+        xarray.DataArray
+            The grid cell centerpoint altitude above ground level in meters.
+
+        """
+        wrf = self._dataset.wrf
+        alt = wrf.altitude_agl.__getitem__(*args)
+        alt_center = (
+            alt[:].isel(bottom_top_stag=slice(None, -1))
+            + alt[:].isel(bottom_top_stag=slice(1, None))
+        ) / 2.0
+        alt_center = alt_center.rename({"bottom_top_stag": "bottom_top"})
+        return xr.DataArray(
+            alt_center,
+            name="Altitude grid box centerpoint above ground level",
+            attrs=dict(
+                long_name="Altitude grid box centerpoint above ground level",
+                units="m",
+            ),
+        )
+
+
+class WRFBoxHeight(DerivedVariable):
+    """The DerivedVariable object to calculate grid box height"""
+
+    def __getitem__(self, *args):
+        """Return the the WRF grid box height
+
+        Parameters
+        ----------
+        *args: slice
+            Slice of interest in the WRF output.
+
+        Return
+        ------
+        xarray.DataArray
+            The grid cell height.
+
+        """
+        wrf = self._dataset.wrf
+        alt = wrf.altitude_agl.__getitem__(*args)
+        box_height = alt[:].isel(bottom_top_stag=slice(1, None)) - alt[:].isel(
+            bottom_top_stag=slice(None, -1)
+        )
+        box_height = box_height.rename({"bottom_top_stag": "bottom_top"})
+        return xr.DataArray(
+            box_height,
+            name="WRF grid box height",
+            attrs=dict(
+                long_name="Grid box height",
+                units="m",
+            ),
         )
