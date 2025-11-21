@@ -800,6 +800,7 @@ class WRFAltitudeASL_C(DerivedVariable):
             alt[:].isel(bottom_top_stag=slice(None, -1))
             + alt[:].isel(bottom_top_stag=slice(1, None))
         ) / 2.0
+        alt_center = alt_center.rename({"bottom_top_stag": "bottom_top"})
         return xr.DataArray(
             alt_center,
             name="Altitude grid box centerpoint above sea level",
@@ -833,6 +834,7 @@ class WRFAltitudeAGL_C(DerivedVariable):
             alt[:].isel(bottom_top_stag=slice(None, -1))
             + alt[:].isel(bottom_top_stag=slice(1, None))
         ) / 2.0
+        alt_center = alt_center.rename({"bottom_top_stag": "bottom_top"})
         return xr.DataArray(
             alt_center,
             name="Altitude grid box centerpoint above ground level",
