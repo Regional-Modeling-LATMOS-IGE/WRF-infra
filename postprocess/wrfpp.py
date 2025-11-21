@@ -731,7 +731,7 @@ class WRFAltitudeASL(DerivedVariable):
         wrf.check_units("PHB", "m2 s-2")
         ph = wrf["PH"].__getitem__(*args)
         pbh = wrf["PHB"].__getitem__(*args)
-        alt = (ph + pbh) / grav_accel
+        alt = (ph + pbh) / constants["grav_accel"]
         return xr.DataArray(
             alt,
             name="grid box cell center - above sea level",
