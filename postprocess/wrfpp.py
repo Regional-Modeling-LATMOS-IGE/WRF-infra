@@ -737,7 +737,7 @@ class WRFAltitudeASL(DerivedVariable):
             name="Altitude above sea level",
             attrs=dict(long_name="Altitude above sea level", units="m"),
         )
-        
+
 
 class WRFAltitudeAGL(DerivedVariable):
     """The DerivedVariable object to calculate grid altitude above ground level."""
