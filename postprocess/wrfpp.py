@@ -466,12 +466,12 @@ class WRFDatasetAccessor(GenericDatasetAccessor):
     def altitude_asl_c(self):
         """The DerivedVariable object to calculate grid cell hight center above sea level."""
         return WRFAltitudeASL_C(self._dataset)
-        
+
     @property
     def altitude_agl_c(self):
         """The DerivedVariable object to calculate grid cell hight center above ground level."""
         return WRFAltitudeAGL_C(self._dataset)
-        
+
     @property
     def box_height(self):
         """The DerivedVariable object to calculate grid box height."""
@@ -849,6 +849,7 @@ class WRFAltitudeAGL_C(DerivedVariable):
             ),
         )
 
+
 class WRFBoxHeight(DerivedVariable):
     """The DerivedVariable object to calculate grid box height"""
 
@@ -868,9 +869,8 @@ class WRFBoxHeight(DerivedVariable):
         """
         wrf = self._dataset.wrf
         alt = wrf.altitude_agl.__getitem__(*args)
-        box_height = (
-            alt[:].isel(bottom_top_stag=slice(None, -1))
-            - alt[:].isel(bottom_top_stag=slice(1, None))
+        box_height = alt[:].isel(bottom_top_stag=slice(1, None)) - alt[:].isel(
+            bottom_top_stag=slice(None, -1)
         )
         box_height = box_height.rename({"bottom_top_stag": "bottom_top"})
         return xr.DataArray(
@@ -881,4 +881,3 @@ class WRFBoxHeight(DerivedVariable):
                 units="m",
             ),
         )
-
