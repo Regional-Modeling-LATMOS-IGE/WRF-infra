@@ -13,8 +13,8 @@ import json
 URL_GITHUB = "https://github.com"
 URL_GROUP_WRF = "%s/wrf-model" % URL_GITHUB
 URL_WPS = "%s/WPS.git" % URL_GROUP_WRF
-URL_GROUP_LATMOS_IGE = "%s/Regional-Modeling-LATMOS-IGE" % URL_GITHUB
-URL_WRFCHEMPOLAR = "%s/WRF-Chem-Polar.git" % URL_GROUP_LATMOS_IGE
+URL_GROUP_POLAR = "%s/WRF-Chem-Polar" % URL_GITHUB
+URL_WRFCHEMPOLAR = "%s/WRF-Chem-Polar.git" % URL_GROUP_POLAR
 
 
 class ConvertToBoolean(argparse.Action):
