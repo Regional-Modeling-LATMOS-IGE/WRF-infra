@@ -49,6 +49,7 @@ constants = dict(
     cp_air=1004.5,  # Heat cap. of dry air at constant pressure (J kg-1 K-1)**
     mm_dryair=28.966e-3,  # Molar mass of dry air (kg mol-1)**
     mm_water=18.015e-3,  # Molar mass of water (kg mol-1)
+    grav_accel=9.81,  # Gravitational constant in (m s-2)
 )
 
 
@@ -451,6 +452,16 @@ class WRFDatasetAccessor(GenericDatasetAccessor):
         """The DerivedVariable object to calculate accumulated total precipitation."""
         return WRFAccumulatedPrecipitation(self._dataset)
 
+    @property
+    def altitude_asl(self):
+        """The DerivedVariable object to calculate grid cell hight above sea level."""
+        return WRFAltitudeASL(self._dataset)
+
+    @property
+    def altitude_agl(self):
+        """The DerivedVariable object to calculate grid cell hight above ground level."""
+        return WRFAltitudeAGL(self._dataset)
+
 
 class DerivedVariable(ABC):
     """Abstract class to define derived variables.
@@ -695,4 +706,62 @@ class WRFAccumulatedPrecipitation(DerivedVariable):
             attrs=dict(
                 long_name="Accumulated total precipitation", units="mm"
             ),
+        )
+
+
+class WRFAltitudeASL(DerivedVariable):
+    """The DerivedVariable object to calculate grid altitude above sea level."""
+
+    def __getitem__(self, *args):
+        """Return the the grid cell altitude above sea level
+
+        Parameters
+        ----------
+        *args: slice
+            Slice of interest in the WRF output.
+
+        Return
+        ------
+        xarray.DataArray
+            The grid cell altitude above sea level in meters.
+
+        """
+        wrf = self._dataset.wrf
+        wrf.check_units("PH", "m2 s-2")
+        wrf.check_units("PHB", "m2 s-2")
+        ph = wrf["PH"].__getitem__(*args)
+        pbh = wrf["PHB"].__getitem__(*args)
+        alt = (ph + pbh) / constants["grav_accel"]
+        return xr.DataArray(
+            alt,
+            name="Altitude above sea level",
+            attrs=dict(long_name="Altitude above sea level", units="m"),
+        )
+
+
+class WRFAltitudeAGL(DerivedVariable):
+    """The DerivedVariable object to calculate grid altitude above ground level."""
+
+    def __getitem__(self, *args):
+        """Return the the grid cell altitude above ground level
+
+        Parameters
+        ----------
+        *args: slice
+            Slice of interest in the WRF output.
+
+        Return
+        ------
+        xarray.DataArray
+            The grid cell altitude above ground level in meters.
+
+        """
+        wrf = self._dataset.wrf
+        wrf.check_units("HGT", "m")
+        hgt = wrf["HGT"].__getitem__(*args)
+        alt = wrf.altitude_asl.__getitem__(*args) - hgt
+        return xr.DataArray(
+            alt,
+            name="Altitude above ground level",
+            attrs=dict(long_name="Altitude above ground level", units="m"),
         )
