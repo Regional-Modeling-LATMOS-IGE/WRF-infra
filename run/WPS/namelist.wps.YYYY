@@ -12,18 +12,18 @@
  parent_grid_ratio =   1,
  i_parent_start    =   1,
  j_parent_start    =   1,
- e_we              =   50,
- e_sn              =   51,
+ e_we              =   86,
+ e_sn              =   86,
  geog_data_res     = 'default',
  dx = 100000,
  dy = 100000,
  map_proj = 'polar',
- ref_lat   = 75.,
- ref_lon   = 23.,
- truelat1  = 80.,
- truelat2  = 60.,
- stand_lon = 23.,
- geog_data_path = '/data/marelle/marelle/WRFChem/WPS_DATA/geog_wrf4'
+ ref_lat   = 84.,
+ ref_lon   = -25.,
+ truelat1  = 84.,
+ truelat2  = 84.,
+ stand_lon = -25.,
+ geog_data_path = '/proju/wrf-chem/input-data/wps_static/wps_v4'
 /
 
 &ungrib
