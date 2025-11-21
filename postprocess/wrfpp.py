@@ -763,7 +763,7 @@ class WRFAltitudeAGL(DerivedVariable):
         ph = wrf["PH"].__getitem__(*args)
         pbh = wrf["PHB"].__getitem__(*args)
         hgt = wrf["HGT"].__getitem__(*args)
-        alt = (ph + pbh) / grav_accel - hgt
+        alt = (ph + pbh) / constants["grav_accel"] - hgt
         return xr.DataArray(
             alt,
             name="grid box cell center - above ground level",
