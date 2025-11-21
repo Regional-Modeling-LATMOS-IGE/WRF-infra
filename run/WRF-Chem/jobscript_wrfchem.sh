@@ -16,17 +16,17 @@ CASENAME='WRF_CHEM_TEST'
 CASENAME_COMMENT='MOZART_MOSAIC'
 
 # Root directory with the compiled WRF executables (main/wrf.exe and main/real.exe)
-WRFDIR=~/WRF/src/WRF-Chem-Polar/WRFV4
+WRFDIR=~/WRF/src/WRF-Chem-Polar
 
 # Simulation start year and month
-yys=2012
-mms=02
-dds=15
+yys=2018
+mms=03
+dds=01
 hhs=00
 # Simulation end year, month, day, hour
-yye=2012
-mme=02
-dde=16
+yye=2018
+mme=03
+dde=08
 hhe=00
 
 NAMELIST="namelist.input.YYYY"

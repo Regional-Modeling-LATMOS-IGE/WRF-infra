@@ -20,21 +20,21 @@ CASENAME='WRF_CHEM_TEST'
 WPS_SRC_DIR=~/WRF/src/WPS/
 
 # Simulation start year and month
-yys=2012
-mms=02
-dds=15
+yys=2018
+mms=03
+dds=01
 hhs=00
 # Simulation end year, month, day, hour
-yye=2012
-mme=02
-dde=16
+yye=2018
+mme=03
+dde=08
 hhe=00
 
 NAMELIST="namelist.wps.YYYY"
 
 # Select the input data.
 # 0=ERA5 reanalysis, 1=ERA-INTERIM reanalysis 2=NCEP/FNL reanalysis
-INPUT_DATA_SELECT=2
+INPUT_DATA_SELECT=0
 
 # Specifiy whether to write chl-a and DMS in met_em files
 # set to true to call add_chloroa_wps.py and add_dmsocean_wps.py
