@@ -757,13 +757,9 @@ class WRFAltitudeAGL(DerivedVariable):
 
         """
         wrf = self._dataset.wrf
-        wrf.check_units("PH", "m2 s-2")
-        wrf.check_units("PHB", "m2 s-2")
         wrf.check_units("HGT", "m")
-        ph = wrf["PH"].__getitem__(*args)
-        pbh = wrf["PHB"].__getitem__(*args)
         hgt = wrf["HGT"].__getitem__(*args)
-        alt = (ph + pbh) / constants["grav_accel"] - hgt
+        alt = wrf.altitude_asl.__getitem__(*args) - hgt
         return xr.DataArray(
             alt,
             name="Altitude above ground level",
