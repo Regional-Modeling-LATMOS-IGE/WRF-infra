@@ -710,10 +710,10 @@ class WRFAccumulatedPrecipitation(DerivedVariable):
 
 
 class WRFAltitudeASL(DerivedVariable):
-    """The DerivedVariable object to calculate grid cell centerpoint hight above sea level."""
+    """The DerivedVariable object to calculate grid altitude above sea level."""
 
     def __getitem__(self, *args):
-        """Return the the grid cell centerpoint height above sea level
+        """Return the the grid cell altitude above sea level
 
         Parameters
         ----------
@@ -723,7 +723,7 @@ class WRFAltitudeASL(DerivedVariable):
         Return
         ------
         xarray.DataArray
-            The grid cell centerpoint height above sea level in meters.
+            The grid cell altitude above sea level in meters.
 
         """
         wrf = self._dataset.wrf
@@ -734,16 +734,16 @@ class WRFAltitudeASL(DerivedVariable):
         alt = (ph + pbh) / constants["grav_accel"]
         return xr.DataArray(
             alt,
-            name="grid box cell center - above sea level",
+            name="Altitude above sea level",
             attrs=dict(long_name="Altitude above sea level", units="m"),
         )
-
+        
 
 class WRFAltitudeAGL(DerivedVariable):
-    """The DerivedVariable object to calculate grid cell centerpoint hight above ground level."""
+    """The DerivedVariable object to calculate grid altitude above ground level."""
 
     def __getitem__(self, *args):
-        """Return the the grid cell centerpoint height above ground level
+        """Return the the grid cell altitude above ground level
 
         Parameters
         ----------
@@ -753,7 +753,7 @@ class WRFAltitudeAGL(DerivedVariable):
         Return
         ------
         xarray.DataArray
-            The grid cell centerpoint height above ground level in meters.
+            The grid cell altitude above ground level in meters.
 
         """
         wrf = self._dataset.wrf
@@ -766,6 +766,6 @@ class WRFAltitudeAGL(DerivedVariable):
         alt = (ph + pbh) / constants["grav_accel"] - hgt
         return xr.DataArray(
             alt,
-            name="grid box cell center - above ground level",
+            name="Altitude above ground level",
             attrs=dict(long_name="Altitude above ground level", units="m"),
         )
