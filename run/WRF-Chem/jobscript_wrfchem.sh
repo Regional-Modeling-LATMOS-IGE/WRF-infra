@@ -34,11 +34,11 @@ NAMELIST="namelist.input.YYYY"
 
 #-------- Parameters --------
 # Root directory for WRF input/output
-OUTDIR_ROOT="/data/$(whoami)/WRF/WRF_OUTPUT"
+OUTDIR_ROOT="/data/$(whoami)/WRFChem/"
 SCRATCH_ROOT="/scratchu/$(whoami)"
 INDIR_ROOT="$OUTDIR_ROOT"
 # WRF-Chem input data directory
-WRFCHEM_INPUT_DATA_DIR="/data/marelle/marelle/WRFChem/wrf_utils/wrfchem_input"
+WRFCHEM_INPUT_DATA_DIR="/proju/wrf-chem/input-data/"
 
 
 #-------- Set up job environment --------
@@ -148,12 +148,12 @@ done
 cp "${REALDIR}/exo_coldens_d01" "$SCRATCH/"
 cp "${REALDIR}/wrf_season_wes_usgs_d01.nc" "$SCRATCH/"
 # Only needed for TUV photolysis
-cp "$WRFCHEM_INPUT_DATA_DIR/upper_bdy/wrf_tuv_xsqy.nc" "$SCRATCH/"
-cp -r "$WRFCHEM_INPUT_DATA_DIR/upper_bdy/DATA"?? "$SCRATCH/"
+cp "$WRFCHEM_INPUT_DATA_DIR/photolysis/wrf_tuv_xsqy.nc" "$SCRATCH/"
+cp -r "$WRFCHEM_INPUT_DATA_DIR/photolysis/DATA"?? "$SCRATCH/"
 
 # Transfer other input data
-cp "$WRFCHEM_INPUT_DATA_DIR/upper_bdy/clim_p_trop.nc" "$SCRATCH/"
-cp "$WRFCHEM_INPUT_DATA_DIR/upper_bdy/ubvals_b40.20th.track1_1996-2005.nc" "$SCRATCH/"
+cp "$WRFCHEM_INPUT_DATA_DIR/upper_boundary_chem/clim_p_trop.nc" "$SCRATCH/"
+cp "$WRFCHEM_INPUT_DATA_DIR/upper_boundary_chem/ubvals_b40.20th.track1_1996-2005.nc" "$SCRATCH/"
 
 # Run WRF --------
 echo " "

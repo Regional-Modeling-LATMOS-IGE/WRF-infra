@@ -16,7 +16,7 @@ import sys
 simudir = sys.argv[1]
 
 #--- file containing the gridded DMS concentration
-dmsfile = '/data/marelle/marelle/EMISSIONS/DMS/Hulswar2022/DMS_Hulswar2022.nc'
+dmsfile = '/proju/wrf-chem/input-data/natural_emissions/ocean/dms/hulswar22/DMS_Hulswar2022.nc'
 
 #--- first date of simulation
 date1 = sys.argv[2]
