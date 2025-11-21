@@ -453,12 +453,12 @@ class WRFDatasetAccessor(GenericDatasetAccessor):
         return WRFAccumulatedPrecipitation(self._dataset)
 
     @property
-    def altitute_above_sea_level_grid_center(self):
+    def altitute_asl(self):
         """The DerivedVariable object to calculate crid cell centerpoint hight above sea level."""
         return WRFAltitudeASL(self._dataset)
 
     @property
-    def altitute_above_ground_grid_level_center(self):
+    def altitute_agl(self):
         """The DerivedVariable object to calculate crid cell centerpoint hight above ground level."""
         return WRFAltitudeAGL(self._dataset)
 
