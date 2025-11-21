@@ -1,34 +1,19 @@
 #!/bin/bash
-
+#
 # Copyright (c) 2025 LATMOS (France, UMR 8190) and IGE (France, UMR 5001).
 #
 # License: BSD 3-clause "new" or "revised" license (BSD-3-Clause).
-
-#-------- Set up and run WPS --------
 #
+# This is the jobscript to run WPS on a slurm-based system. This script can
+# also be used directly as an executable.
 
 # Resources used
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --time=01:00:00
 
-
-#-------- Input --------
-CASENAME='WRF_CHEM_TEST'
-
-# Directory containing the WPS executables and inputs
-WPS_SRC_DIR=~/WRF/src/WPS/
-
-# Simulation start year and month
-yys=2012
-mms=02
-dds=15
-hhs=00
-# Simulation end year, month, day, hour
-yye=2012
-mme=02
-dde=16
-hhe=00
+source ../simulation.config
+source ../commons.bash
 
 NAMELIST="namelist.wps.YYYY"
 
@@ -67,43 +52,18 @@ module load netcdf-fortran/4.5.3
 module load hdf5/1.10.7
 module load jasper/2.0.32
 
-# Set run start and end date
-date_s="$yys-$mms-$dds"
-date_e="$yye-$mme-$dde"
 
-
-# -------- Sanity checks on inputs --------
-echo ""
-# All of these inputs should be integers
-if ! [ "$yys" -eq "$yys" ] || ! [ "$mms" -eq "$mms" ] ||  ! [ "$dds" -eq "$dds" ] \
-|| ! [ "$yye" -eq "$yye" ] || ! [ "$mme" -eq "$mme" ] ||  ! [ "$dde" -eq "$dde" ]; then
-  echo "Error, inputs to this script should be integers" >&2
-  exit 1
-fi
-# The INPUT_DATA_SELECT selector should be set to one of the expected values
+# Sanity checks on inputs
+check_period $date_start $date_end
 if (( (INPUT_DATA_SELECT < 0) | (INPUT_DATA_SELECT > 2) )); then
   echo "Error, INPUT_DATA_SELECT = ${INPUT_DATA_SELECT}, should be between 0 and 2" >&2
-  exit 1
-fi
-# Dates should be in the YYYY-MM-DD format
-if (( ${#yys} !=4 | ${#mms} !=2 | ${#dds} !=2  )); then
-  echo "Error, start year, month, date format must be YYYY, MM, DD; now $yys, $mms, $dds" >&2
-  exit 1
-fi
-if (( ${#yye} !=4 | ${#mme} !=2 | ${#dde} !=2  )); then
-  echo "Error, end year, month, date format must be YYYY, MM, DD; now $yye, $mme, $dde" >&2
-  exit 1
-fi
-# Start date should be before end date
-if  (( $(date -d "$date_s" "+%s") >= $(date -d "$date_e" "+%s") )); then
-  echo "Error: start date $date_s >= end date $date_e" >&2
   exit 1
 fi
 
 
 #-------- Set up WPS input and output directories & files  --------
 # Directory containing WPS output (i.e. met_em files)
-OUTDIR="${OUTDIR_ROOT}/met_em_${CASENAME}_$(date -d "$date_s" "+%Y")"
+OUTDIR="${OUTDIR_ROOT}/met_em_${CASENAME}_$(date -d "$date_start" "+%Y")"
 if [ -d "$OUTDIR" ]
 then
   echo "Warning: directory $OUTDIR already exists, overwriting"
@@ -113,16 +73,16 @@ else
 fi
 
 # Also create a temporary run directory
-SCRATCH="$SCRATCH_ROOT/met_em_${CASENAME}_$(date -d "$date_s" "+%Y").$SLURM_JOBID"
+SCRATCH="$SCRATCH_ROOT/met_em_${CASENAME}_$(date -d "$date_sstart" "+%Y").$SLURM_JOBID"
 rm -rf "$SCRATCH"
 mkdir -pv "$SCRATCH"
 cd "$SCRATCH" || exit
 
 # Write the info on input/output directories to run log file
-echo "Running WPS executables from $WPS_SRC_DIR"
+echo "Running WPS executables from $wps_installed"
 echo "Running on scratchdir $SCRATCH"
 echo "Writing output to $OUTDIR"
-echo "Running from $date_s to $date_e"
+echo "Running from $date_start to $date_end"
 
 cp "$SLURM_SUBMIT_DIR/"* "$SCRATCH/"
 
@@ -143,9 +103,9 @@ sed -i "5s/HH/${hhe}/g" namelist.wps
 
 #-------- Run geogrid --------
 mkdir -v geogrid
-cp "$WPS_SRC_DIR/geogrid/GEOGRID.TBL" geogrid/GEOGRID.TBL
+cp "$wps_installed/geogrid/GEOGRID.TBL" geogrid/GEOGRID.TBL
 echo "-------- Running geogrid.exe --------"
-cp "$WPS_SRC_DIR/geogrid.exe" .
+cp "$wps_installed/geogrid.exe" .
 mpirun ./geogrid.exe
 # Clean up
 rm -f geogrid.exe
@@ -158,42 +118,42 @@ echo "-------- Running ungrib.exe --------"
 mkdir -v grib_links
 
 # Create links to the GRIB files in grib_links/
-date_ungrib=$(date +"%Y%m%d" -d "$date_s")
-while (( $(date -d "$date_ungrib" "+%s") <= $(date -d "$date_e" "+%s") )); do
-  if (( INPUT_DATA_SELECT==0 )); then
-    ln -sf "$GRIB_DIR/ERA5/ERA5_grib1_invariant_fields/e5.oper.invariant."* grib_links/
-    ln -sf "$GRIB_DIR/ERA5/ERA5_grib1_$(date +"%Y" -d "$date_ungrib")/e5"*"pl"*"$(date +"%Y%m" -d "$date_ungrib")"* grib_links/
-    ln -sf "$GRIB_DIR/ERA5/ERA5_grib1_$(date +"%Y" -d "$date_ungrib")/e5"*"sfc"*"$(date +"%Y%m" -d "$date_ungrib")"* grib_links/
-  # ERA-interim input
-  elif (( INPUT_DATA_SELECT==1 )); then
-    ln -sf "$GRIB_DIR/ERAI/ERA-Int_grib1_$(date +"%Y" -d "$date_ungrib")/ei.oper."*"pl"*"$(date +"%Y%m%d" -d "$date_ungrib")"* grib_links/
-    ln -sf "$GRIB_DIR/ERAI/ERA-Int_grib1_$(date +"%Y" -d "$date_ungrib")/ei.oper."*"sfc"*"$(date +"%Y%m%d" -d "$date_ungrib")"* grib_links/
-  # FNL input
-  elif (( INPUT_DATA_SELECT==2 )); then
-    ln -sf "$GRIB_DIR/FNL$(date +"%Y" -d "$date_ungrib")/fnl_$(date +"%Y%m%d" -d "$date_ungrib")"* grib_links/
-  fi
-  # Go to the next date to ungrib
-  date_ungrib=$(date +"%Y%m%d" -d "$date_ungrib + 1 day");
+
+date_ungrib=$(date -d "$date_start" +%Y%m%d)
+while [[ $(date -d "$date_ungrib" +%s) -le $(date -d "$date_end" +%s) ]]; do
+
+    if [[ INPUT_DATA_SELECT -eq 0 ]]; then
+        # ERA5
+        ln -sf "$GRIB_DIR/ERA5/ERA5_grib1_invariant_fields/e5.oper.invariant."* grib_links/
+        ln -sf "$GRIB_DIR/ERA5/ERA5_grib1_$(date -d "$date_ungrib" +"%Y")/e5"*"pl"*"$(date -d "$date_ungrib" +"%Y%m")"* grib_links/
+        ln -sf "$GRIB_DIR/ERA5/ERA5_grib1_$(date -d "$date_ungrib" +"%Y")/e5"*"sfc"*"$(date -d "$date_ungrib +"%Y%m"")"* grib_links/
+    elif [[ INPUT_DATA_SELECT==2 ]]; then
+        # FNL
+        ln -sf "$GRIB_DIR/FNL$(date -d "$date_ungrib" +"%Y")/fnl_$(date -d "$date_ungrib" +"%Y%m%d")"* grib_links/
+    fi
+
+    # Go to the next date to ungrib
+    date_ungrib=$(date -d "$date_ungrib + 1 day" +"%Y%m%d");
 done
 
 # Create links with link_grib.csh, ungrib with ungrib.exe
 ls -ltrh grib_links
-cp "$WPS_SRC_DIR/link_grib.csh" .
-cp "$WPS_SRC_DIR/ungrib.exe" .
+cp "$wps_installed/link_grib.csh" .
+cp "$wps_installed/ungrib.exe" .
 
 # ERA-interim input
 if (( INPUT_DATA_SELECT==0 )); then
-  cp "$WPS_SRC_DIR/ungrib/Variable_Tables/Vtable.ERA-interim.pl" Vtable
+  cp "$wps_installed/ungrib/Variable_Tables/Vtable.ERA-interim.pl" Vtable
   sed -i 's/_FILE_ungrib_/FILE/g' namelist.wps
   ./link_grib.csh grib_links/e5
   ./ungrib.exe
 elif (( INPUT_DATA_SELECT==1 )); then
-  cp "$WPS_SRC_DIR/ungrib/Variable_Tables/Vtable.ERA-interim.pl" Vtable
+  cp "$wps_installed/ungrib/Variable_Tables/Vtable.ERA-interim.pl" Vtable
   sed -i 's/_FILE_ungrib_/FILE/g' namelist.wps
   ./link_grib.csh grib_links/ei
   ./ungrib.exe
 elif (( INPUT_DATA_SELECT==2 )); then
-  cp "$WPS_SRC_DIR/ungrib/Variable_Tables/Vtable.GFS" Vtable
+  cp "$wps_installed/ungrib/Variable_Tables/Vtable.GFS" Vtable
   sed -i 's/_FILE_ungrib_/FILE/g' namelist.wps
   ./link_grib.csh grib_links/fnl
   ./ungrib.exe
@@ -207,11 +167,11 @@ rm -rf grib_links
 
 #-------- Run metgrid --------
 echo "-------- Running metgrid.exe --------"
-cp "$WPS_SRC_DIR/util/avg_tsfc.exe" .
-cp "$WPS_SRC_DIR/metgrid.exe" .
+cp "$wps_installed/util/avg_tsfc.exe" .
+cp "$wps_installed/metgrid.exe" .
 
 mkdir -v metgrid
-ln -sf "$WPS_SRC_DIR/metgrid/METGRID.TBL" metgrid/METGRID.TBL
+ln -sf "$wps_installed/metgrid/METGRID.TBL" metgrid/METGRID.TBL
 
 # In order to use the daily averaged skin temperature for lakes, tavgsfc (thus also metgrid)
 # should be run once per day
