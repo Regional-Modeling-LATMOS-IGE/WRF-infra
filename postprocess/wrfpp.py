@@ -461,7 +461,7 @@ class WRFDatasetAccessor(GenericDatasetAccessor):
     def altitude_agl(self):
         """The DerivedVariable object to calculate grid cell hight above ground level."""
         return WRFAltitudeAGL(self._dataset)
-        
+
     @property
     def altitude_asl_c(self):
         """The DerivedVariable object to calculate grid cell hight center above sea level."""
@@ -471,6 +471,7 @@ class WRFDatasetAccessor(GenericDatasetAccessor):
     def altitude_agl_c(self):
         """The DerivedVariable object to calculate grid cell hight center above ground level."""
         return WRFAltitudeAGL_C(self._dataset)
+
 
 class DerivedVariable(ABC):
     """Abstract class to define derived variables.
@@ -795,9 +796,48 @@ class WRFAltitudeASL_C(DerivedVariable):
         """
         wrf = self._dataset.wrf
         alt = wrf.altitude_asl.__getitem__(*args)
-        alt_center = (alt[:].isel(bottom_top_stag=slice(None,-1))+alt[:].isel(bottom_top_stag=slice(1,None)))/2.
+        alt_center = (
+            alt[:].isel(bottom_top_stag=slice(None, -1))
+            + alt[:].isel(bottom_top_stag=slice(1, None))
+        ) / 2.0
         return xr.DataArray(
             alt_center,
             name="Altitude grid box centerpoint above sea level",
-            attrs=dict(long_name="Altitude grid box centerpoint above sea level", units="m"),
+            attrs=dict(
+                long_name="Altitude grid box centerpoint above sea level",
+                units="m",
+            ),
+        )
+
+
+class WRFAltitudeAGL_C(DerivedVariable):
+    """The DerivedVariable object to calculate grid centerpoint altitude above ground level."""
+
+    def __getitem__(self, *args):
+        """Return the the grid cell centerpoint altitude ground sea level
+
+        Parameters
+        ----------
+        *args: slice
+            Slice of interest in the WRF output.
+
+        Return
+        ------
+        xarray.DataArray
+            The grid cell centerpoint altitude above ground level in meters.
+
+        """
+        wrf = self._dataset.wrf
+        alt = wrf.altitude_agl.__getitem__(*args)
+        alt_center = (
+            alt[:].isel(bottom_top_stag=slice(None, -1))
+            + alt[:].isel(bottom_top_stag=slice(1, None))
+        ) / 2.0
+        return xr.DataArray(
+            alt_center,
+            name="Altitude grid box centerpoint above ground level",
+            attrs=dict(
+                long_name="Altitude grid box centerpoint above ground level",
+                units="m",
+            ),
         )
