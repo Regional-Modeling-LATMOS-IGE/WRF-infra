@@ -19,12 +19,12 @@ CASENAME_COMMENT='MOZART_MOSAIC'
 WRFDIR=~/WRF/src/WRF-Chem-Polar
 
 # Simulation start year and month
-yys=2018
+yys=2012
 mms=03
 dds=01
 hhs=00
 # Simulation end year, month, day, hour
-yye=2018
+yye=2012
 mme=03
 dde=08
 hhe=00
