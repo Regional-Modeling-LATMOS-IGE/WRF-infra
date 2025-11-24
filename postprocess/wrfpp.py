@@ -728,6 +728,7 @@ class WRFAccumulatedPrecipitation(DerivedVariable):
             ),
         )
 
+
 class WRFGridCellArea(DerivedVariable):
     """Derived variable for calcuating grid cell (box) area from WRF outputs."""
 
@@ -752,6 +753,7 @@ class WRFGridCellArea(DerivedVariable):
             name="grid cell area",
             attrs=dict(long_name="Grid Cell Area", units="m2"),
         )
+
 
 class WRFAltitudeASL(DerivedVariable):
     """The DerivedVariable object to calculate grid altitude above sea level."""
