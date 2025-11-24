@@ -454,22 +454,22 @@ class WRFDatasetAccessor(GenericDatasetAccessor):
 
     @property
     def altitude_asl(self):
-        """The DerivedVariable object to calculate grid cell hight above sea level."""
+        """The DerivedVariable object to calculate grid cell height above sea level."""
         return WRFAltitudeASL(self._dataset)
 
     @property
     def altitude_agl(self):
-        """The DerivedVariable object to calculate grid cell hight above ground level."""
+        """The DerivedVariable object to calculate grid cell height above ground level."""
         return WRFAltitudeAGL(self._dataset)
 
     @property
     def altitude_asl_c(self):
-        """The DerivedVariable object to calculate grid cell hight center above sea level."""
+        """The DerivedVariable object to calculate grid cell height center above sea level."""
         return WRFAltitudeASL_C(self._dataset)
 
     @property
     def altitude_agl_c(self):
-        """The DerivedVariable object to calculate grid cell hight center above ground level."""
+        """The DerivedVariable object to calculate grid cell height center above ground level."""
         return WRFAltitudeAGL_C(self._dataset)
 
     @property
