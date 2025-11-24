@@ -85,13 +85,6 @@ Notes:
      used anywhere, although CAMS emissions do have a shipping sector. Should
      we implement the use of this ratio?
 
-   * In Louis' original script, there was a check that stopped the script if
-     selected start and end dates were not in 2019. It is also implemented
-     here, but is it necessary? I am guessing that the "2019" in CAMS'
-     filenames probably refer to the year of the method used to
-     # create the files. The files I looked at actually contained emissions for
-     years 2000 through 2013.
-
 """
 
 import sys
@@ -389,9 +382,6 @@ if __name__ == "__main__":
     period = timedelta(**{args.period+"s": 1})
 
     # Quality controls on arguments
-    if start.year != 2019 or end.year != 2019:
-        # TODO I don't think this limit applies here
-        raise NotImplementedError("Only year 2019-emissions are supported.")
     if start >= end:
         raise ValueError("Start date must be before end date.")
     if args.nlevels <= 0:
