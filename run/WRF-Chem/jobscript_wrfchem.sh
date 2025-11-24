@@ -6,14 +6,14 @@
 
 # Resources used
 #SBATCH --nodes=1
-#SBATCH --ntasks-per-node=4
-#SBATCH --mem=8G
-#SBATCH --time=03:00:00
+#SBATCH --ntasks-per-node=32
+#SBATCH --mem=60G
+#SBATCH --time=24:00:00
 
 
 #-------- Input --------
 CASENAME='WRF_CHEM_TEST'
-CASENAME_COMMENT='MOZART_MOSAIC'
+CASENAME_COMMENT='MOZARTMOSAIC'
 
 # Root directory with the compiled WRF executables (main/wrf.exe and main/real.exe)
 WRFDIR=~/WRF/src/WRF-Chem-Polar

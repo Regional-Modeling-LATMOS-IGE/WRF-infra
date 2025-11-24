@@ -35,6 +35,7 @@
  auxinput7_interval_m                = 60, 60, 60, 60,
  frames_per_auxinput7                = 1, 1, 1, 1, 
  io_form_auxinput7                   = 2
+ force_use_old_data                  = .true.
  debug_level                         = 0
  /
 

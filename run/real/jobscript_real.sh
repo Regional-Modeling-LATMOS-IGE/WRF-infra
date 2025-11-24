@@ -7,8 +7,12 @@
 # Resources used
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
-#SBATCH --time=01:00:00
+#SBATCH --time=06:00:00
 
+CONDA_EXE="/proju/wrf-chem/software/micromamba/micromamba"
+CONDA_ROOT_PREFIX="/proju/wrf-chem/software/conda-envs/shared"
+CONDA_ENV_NAME="WRF-Chem-Polar_2025-10-21"
+CONDA_RUN="$CONDA_EXE run --root-prefix=$CONDA_ROOT_PREFIX --name=$CONDA_ENV_NAME"
 
 #-------- Input --------
 CASENAME='WRF_CHEM_TEST'
@@ -222,10 +226,10 @@ ncks -A -v XLONG,XLAT wrfinput_d01 exo_coldens_d01
 echo " "
 echo "-------- $SLURM_JOB_NAME: run fire_emis --------"
 echo " "
-# Find the fire emission file autmatically in FIREEMIS_DIR, assuming it is called e.g. GLOBAL_FINNv15_2012_MOZART.txt
+# Find the fire emission file autmatically in FIREEMIS_DIR, assuming it is called e.g. GLOBAL_FINNv1.5_2012.MOZ.txt
 #TODO update to latest version
 FIREEMIS_DIR="$WRFCHEM_INPUT_DATA_DIR/fire_emissions/finn/version1/"
-FIREEMIS_FILE="$(ls -1 --color=never "$FIREEMIS_DIR/"*"v15"*"_${yys}_"*"MOZ"*".txt" | xargs -n 1 basename | tail -n1)"
+FIREEMIS_FILE="$(ls -1 --color=never "$FIREEMIS_DIR/"*"v1.5"*"_${yys}"*"MOZ"*".txt" | xargs -n 1 basename | tail -n1)"
 echo "Run FIREEMIS for $FIREEMIS_DIR/$FIREEMIS_FILE"
 if [ -f "$FIREEMIS_DIR/$FIREEMIS_FILE" ]; then
   sed -i "s:fire_directory    = .*:fire_directory    = \'$FIREEMIS_DIR\',:g" fire_emis_mozartmosaic.inp
@@ -246,7 +250,7 @@ echo "-------- $SLURM_JOB_NAME: run emission script --------"
 echo " "
 ANTHRO_EMS_DIR="$WRFCHEM_INPUT_DATA_DIR/anthro_emissions/cams/"
 cp "$SLURM_SUBMIT_DIR/cams2wrfchem.py" "$SCRATCH/"
-python -u cams2wrfchem.py --start ${date_s} --end ${date_e} --domain 1 --dir-em-in ${ANTHRO_EMS_DIR}
+$CONDA_RUN python -u cams2wrfchem.py --start ${date_s} --end ${date_e} --domain 1 --dir-em-in ${ANTHRO_EMS_DIR}
 
 #---- Initialize snow on sea ice
 echo " "

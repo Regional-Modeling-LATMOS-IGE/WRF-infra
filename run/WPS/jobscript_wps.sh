@@ -12,12 +12,17 @@
 #SBATCH --ntasks-per-node=1
 #SBATCH --time=01:00:00
 
+#----------- Set up shared python environment -----------
+CONDA_EXE="/proju/wrf-chem/software/micromamba/micromamba"
+CONDA_ROOT_PREFIX="/proju/wrf-chem/software/conda-envs/shared"
+CONDA_ENV_NAME="WRF-Chem-Polar_2025-10-21"
+CONDA_RUN="$CONDA_EXE run --root-prefix=$CONDA_ROOT_PREFIX --name=$CONDA_ENV_NAME"
 
 #-------- Input --------
 CASENAME='WRF_CHEM_TEST'
 
 # Directory containing the WPS executables and inputs
-WPS_SRC_DIR=~/WRF/src/WPS/
+WPS_SRC_DIR=/home/marelle/WRF/src/WPS/
 
 # Simulation start year and month
 yys=2012
@@ -165,7 +170,7 @@ while (( $(date -d "$date_ungrib" "+%s") <= $(date -d "$date_e" "+%s") )); do
     ln -sf "$GRIB_DIR/ERAI/ERA-Int_grib1_$(date +"%Y" -d "$date_ungrib")/ei.oper."*"sfc"*"$(date +"%Y%m%d" -d "$date_ungrib")"* grib_links/
   # FNL input
   elif (( INPUT_DATA_SELECT==2 )); then
-    ln -sf "$GRIB_DIR/FNL/ds083.2/FNL$(date +"%Y" -d "$date_ungrib")/fnl_$(date +"%Y%m%d" -d "$date_ungrib")"* grib_links/
+    ln -sf "$GRIB_DIR/fnl/ds083.2/FNL$(date +"%Y" -d "$date_ungrib")/fnl_$(date +"%Y%m%d" -d "$date_ungrib")"* grib_links/
   fi
   # Go to the next date to ungrib
   date_ungrib=$(date +"%Y%m%d" -d "$date_ungrib + 1 day");
@@ -245,11 +250,11 @@ rm -rf metgrid
 if $USE_CHLA_DMS_WPS; then
   #---- Add chlorophyll-a oceanic concentrations to met_em*
   echo "python -u add_chloroa_wps.py $SCRATCH/ ${date_s} ${date_e}"
-  python -u add_chloroa_wps.py "$SCRATCH/" "${date_s}" "${date_e}"
+  $CONDA_RUN python -u add_chloroa_wps.py "$SCRATCH/" "${date_s}" "${date_e}"
 
   #---- Add DMS oceanic concentrations to met_em*
   echo "python -u add_dmsocean_wps.py $SCRATCH/ ${date_s} ${date_e}"
-  python -u add_dmsocean_wps.py "$SCRATCH/" "${date_s}" "${date_e}"
+  $CONDA_RUN python -u add_dmsocean_wps.py "$SCRATCH/" "${date_s}" "${date_e}"
 fi
 
 #-------- Clean up --------
