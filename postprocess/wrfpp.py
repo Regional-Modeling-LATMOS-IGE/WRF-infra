@@ -473,9 +473,9 @@ class WRFDatasetAccessor(GenericDatasetAccessor):
         return WRFAltitudeAGL_C(self._dataset)
 
     @property
-    def box_height(self):
-        """The DerivedVariable object to calculate grid box height."""
-        return WRFBoxHeight(self._dataset)
+    def box_dz(self):
+        """The DerivedVariable object to calculate grid box dz (vertical extent)."""
+        return WRFBoxDz(self._dataset)
 
 
 class DerivedVariable(ABC):
@@ -850,7 +850,7 @@ class WRFAltitudeAGL_C(DerivedVariable):
         )
 
 
-class WRFBoxHeight(DerivedVariable):
+class WRFBoxDz(DerivedVariable):
     """The DerivedVariable object to calculate grid box height"""
 
     def __getitem__(self, *args):
@@ -869,15 +869,15 @@ class WRFBoxHeight(DerivedVariable):
         """
         wrf = self._dataset.wrf
         alt = wrf.altitude_agl.__getitem__(*args)
-        box_height = alt[:].isel(bottom_top_stag=slice(1, None)) - alt[:].isel(
+        box_dz = alt[:].isel(bottom_top_stag=slice(1, None)) - alt[:].isel(
             bottom_top_stag=slice(None, -1)
         )
         box_height = box_height.rename({"bottom_top_stag": "bottom_top"})
         return xr.DataArray(
-            box_height,
-            name="WRF grid box height",
+            box_dz,
+            name="WRF grid box dz (vertical extent)",
             attrs=dict(
-                long_name="Grid box height",
+                long_name="Grid grid box dz (vertical extent)",
                 units="m",
             ),
         )
