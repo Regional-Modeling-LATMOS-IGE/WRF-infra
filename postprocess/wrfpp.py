@@ -872,7 +872,7 @@ class WRFBoxDz(DerivedVariable):
         box_dz = alt[:].isel(bottom_top_stag=slice(1, None)) - alt[:].isel(
             bottom_top_stag=slice(None, -1)
         )
-        box_height = box_height.rename({"bottom_top_stag": "bottom_top"})
+        box_dz = box_dz({"bottom_top_stag": "bottom_top"})
         return xr.DataArray(
             box_dz,
             name="WRF grid box dz (vertical extent)",
