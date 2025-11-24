@@ -1,28 +1,8 @@
+# Copyright (c) 2025 LATMOS (France, UMR 8190) and IGE (France, UMR 5001).
+#
+# License: BSD 3-clause "new" or "revised" license (BSD-3-Clause).
+
 """Prepare WRF-chem emission input files using CAMS emission inventory.
-
-Copyright (c) 2024 Regional-Modeling-LATMOS-IGE.
-
-This software is released under the terms of the Expat (aka MIT) license:
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of
-this software and associated documentation files (the "Software"), to deal in
-the Software without restriction, including without limitation the rights to
-use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
-of the Software, and to permit persons to whom the Software is furnished to do
-so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-
--------------------------------------------------------------------------------
 
 Notes:
 
@@ -104,13 +84,6 @@ Notes:
      specifically for ship emissions, but this variable does not seem to be
      used anywhere, although CAMS emissions do have a shipping sector. Should
      we implement the use of this ratio?
-
-   * In Louis' original script, there was a check that stopped the script if
-     selected start and end dates were not in 2019. It is also implemented
-     here, but is it necessary? I am guessing that the "2019" in CAMS'
-     filenames probably refer to the year of the method used to
-     # create the files. The files I looked at actually contained emissions for
-     years 2000 through 2013.
 
 """
 
@@ -409,9 +382,6 @@ if __name__ == "__main__":
     period = timedelta(**{args.period+"s": 1})
 
     # Quality controls on arguments
-    if start.year != 2019 or end.year != 2019:
-        # TODO I don't think this limit applies here
-        raise NotImplementedError("Only year 2019-emissions are supported.")
     if start >= end:
         raise ValueError("Start date must be before end date.")
     if args.nlevels <= 0:

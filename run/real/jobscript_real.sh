@@ -16,7 +16,6 @@ CASENAME_COMMENT='MOZARTMOSAIC'
 
 # Root directory with the compiled WRF executables (main/wrf.exe and main/real.exe)
 WRFDIR=~/WRF/src/WRF-Chem-Polar/WRFV4
-WRFVERSION='chem.develop'
 
 # Simulation start year and month
 yys=2012
@@ -34,7 +33,7 @@ NAMELIST="namelist.input.YYYY"
 
 #-------- Parameters --------
 # Root directory for WRF input/output
-OUTDIR_ROOT="/data/marelle/marelle/WRF/WRF_OUTPUT"
+OUTDIR_ROOT="/data/$(whoami)/WRF/WRF_OUTPUT"
 SCRATCH_ROOT="/scratchu/$(whoami)"
 # WRF-Chem input data directory
 WRFCHEM_INPUT_DATA_DIR="/data/marelle/marelle/WRF/wrfchem-input-data"
@@ -63,7 +62,7 @@ date_e="$yye-$mme-$dde"
 ID="$(date +"%Y%m%d").$SLURM_JOBID"
 
 # Case name for the output folder
-if [ -n "$CASENAME_COMMENT" ]; then 
+if [ -n "$CASENAME_COMMENT" ]; then
   CASENAME_COMMENT="_${CASENAME_COMMENT}"
 fi
 
@@ -74,20 +73,20 @@ REALDIR="${OUTDIR_ROOT}/real_${CASENAME}${CASENAME_COMMENT}_$(date -d "$date_s" 
 if [ -d "$REALDIR" ]; then
   rm -f "$REALDIR/"*
 else
-  mkdir "$REALDIR"
+  mkdir -pv "$REALDIR"
 fi
 
 # Also create a temporary scratch run directory
 SCRATCH="$SCRATCH_ROOT/real_${CASENAME}${CASENAME_COMMENT}_$(date -d "$date_s" "+%Y").${ID}.scratch"
 rm -rf "$SCRATCH"
-mkdir "$SCRATCH"
+mkdir -pv "$SCRATCH"
 cd "$SCRATCH" || exit
 
 # Write the info on input/output directories to run log file
 echo " "
 echo "-------- $SLURM_JOB_NAME: Launch real.exe and preprocessors --------"
 echo "Running from $date_s to $date_e"
-echo "Running version real.exe.$WRFVERSION from $WRFDIR"
+echo "Running version real.exe from $WRFDIR"
 echo "Running on scratchdir $SCRATCH"
 echo "Writing output to $REALDIR"
 echo "Input files from WPS taken from $WPSDIR"
@@ -104,7 +103,7 @@ cd "$SCRATCH" || exit
 cp "$SLURM_SUBMIT_DIR/"* "$SCRATCH/"
 # Executables and WRF aux files from WRFDIR
 cp "$WRFDIR/run/"* "$SCRATCH/"
-cp "$WRFDIR/../executables/real.exe.$WRFVERSION" "$SCRATCH/real.exe" || exit
+cp "$WRFDIR/main/real.exe" "$SCRATCH/real.exe" || exit
 # met_em WPS files from WPSDIR
 cp "${WPSDIR}/met_em.d"* "$SCRATCH/" || exit
 
@@ -145,7 +144,9 @@ echo " "
 echo "-------- $SLURM_JOB_NAME: run megan_bio_emiss --------"
 echo " "
 # megan_bio_emiss often SIGSEGVs at the end but this is not an issue
-ln -s "$WRFCHEM_INPUT_DATA_DIR/bio_emissions/megan_bio_emiss/"*'.nc' .
+MEGANEMIS_DIR="$WRFCHEM_INPUT_DATA_DIR/bio_emissions/megan_bio_emiss"
+ln -s "${MEGANEMIS_DIR}/"*".nc" .
+sed -i "s:MEGANEMIS_DIR:${MEGANEMIS_DIR}:g" megan_bioemiss.inp
 sed -i "s:WRFRUNDIR:$PWD/:g" megan_bioemiss.inp
 if [ $mms -eq 1 ]; then
   sed -i "s:SMONTH:1:g" megan_bioemiss.inp
@@ -198,7 +199,7 @@ else
   exit 1
 fi
 tail mozbc.out
- 
+
 #---- Run wes-coldens preprocessor (needed only for the MOZART gas phase mechanism, creates a
 # wrf_season* and exo_coldens* file, containing seasonal dry deposition
 # coefficients and trace gases above the domain top, respectively)
@@ -238,13 +239,12 @@ else
 fi
 tail fire_emis.out
 
-#---- Run the matlab anthro emission preprocessor (create wrfchemi* files)
+#---- Run the python anthro emission preprocessor (create wrfchemi* files)
 echo " "
 echo "-------- $SLURM_JOB_NAME: run emission script --------"
 echo " "
-module load matlab
-#TODO replace by CAMS or give choice
-matlab -nodisplay -singleCompThread -nodesktop -r "prep_anthro_emissions_mozartmosaic_eclipse_rcp(datenum($yys,$mms,$dds),datenum($yye,$mme,$dde));exit" > prep_anthro_emissions.out
+cp "$SLURM_SUBMIT_DIR/cams2wrfchem.py" "$SCRATCH/"
+python -u cams2wrfchem.py --start ${date_s} --end ${date_e} --domain 1
 
 #---- Initialize snow on sea ice
 echo " "
@@ -275,4 +275,3 @@ cp ./namelist.output "$REALDIR/"
 
 # Remove scratch dir
 rm -rf "$SCRATCH"
-

@@ -78,7 +78,8 @@
 ! min time step (s) needs to be = the resolution (km)
  min_time_step                       = 100,15,3,
  adaptation_domain                   = 1,
- /
+ wif_input_opt                       = 1,
+/
 
  &physics
 ! Microphysics options

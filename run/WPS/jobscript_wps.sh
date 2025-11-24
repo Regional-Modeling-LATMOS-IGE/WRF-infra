@@ -32,7 +32,7 @@ hhe=00
 
 NAMELIST="namelist.wps.YYYY"
 
-# Select the input data. 
+# Select the input data.
 # 0=ERA5 reanalysis, 1=ERA-INTERIM reanalysis 2=NCEP/FNL reanalysis
 INPUT_DATA_SELECT=2
 
@@ -44,7 +44,7 @@ USE_CHLA_DMS_WPS=true
 #-------- Parameters --------
 # Root directory for WPS input/output
 # Change this to your own /data or /proju directory
-OUTDIR_ROOT="/data/marelle/marelle/WRF/WRF_OUTPUT"
+OUTDIR_ROOT="/data/$(whoami)/WRF/WRF_OUTPUT"
 SCRATCH_ROOT="/scratchu/$(whoami)"
 
 # Directory containing the GRIB file inputs for ungrib
@@ -109,13 +109,13 @@ then
   echo "Warning: directory $OUTDIR already exists, overwriting"
   rm -rf "${OUTDIR:?}/"*
 else
-  mkdir "$OUTDIR"
+  mkdir -pv "$OUTDIR"
 fi
 
 # Also create a temporary run directory
 SCRATCH="$SCRATCH_ROOT/met_em_${CASENAME}_$(date -d "$date_s" "+%Y").$SLURM_JOBID"
 rm -rf "$SCRATCH"
-mkdir "$SCRATCH"
+mkdir -pv "$SCRATCH"
 cd "$SCRATCH" || exit
 
 # Write the info on input/output directories to run log file
@@ -142,8 +142,8 @@ sed -i "5s/HH/${hhe}/g" namelist.wps
 
 
 #-------- Run geogrid --------
-mkdir geogrid
-cp "$SLURM_SUBMIT_DIR/GEOGRID.TBL" geogrid/GEOGRID.TBL
+mkdir -v geogrid
+cp "$WPS_SRC_DIR/geogrid/GEOGRID.TBL" geogrid/GEOGRID.TBL
 echo "-------- Running geogrid.exe --------"
 cp "$WPS_SRC_DIR/geogrid.exe" .
 mpirun ./geogrid.exe
@@ -154,10 +154,10 @@ rm -rf geogrid
 
 #-------- Run ungrib --------
 echo "-------- Running ungrib.exe --------"
-# Create a directory containing links to the grib files of interest  
-mkdir grib_links
+# Create a directory containing links to the grib files of interest
+mkdir -v grib_links
 
-# Create links to the GRIB files in grib_links/ 
+# Create links to the GRIB files in grib_links/
 date_ungrib=$(date +"%Y%m%d" -d "$date_s")
 while (( $(date -d "$date_ungrib" "+%s") <= $(date -d "$date_e" "+%s") )); do
   if (( INPUT_DATA_SELECT==0 )); then
@@ -193,11 +193,7 @@ elif (( INPUT_DATA_SELECT==1 )); then
   ./link_grib.csh grib_links/ei
   ./ungrib.exe
 elif (( INPUT_DATA_SELECT==2 )); then
-  # Ungrib for FNL
-  # The FNL data format changed recently, but the format available on SPIRIT is
-  # the old one. Need to use the old Vtable.
-  # cp "$WPS_SRC_DIR/ungrib/Variable_Tables/Vtable.GFS" Vtable
-  cp "$SLURM_SUBMIT_DIR/Vtable.GFS" Vtable
+  cp "$WPS_SRC_DIR/ungrib/Variable_Tables/Vtable.GFS" Vtable
   sed -i 's/_FILE_ungrib_/FILE/g' namelist.wps
   ./link_grib.csh grib_links/fnl
   ./ungrib.exe
@@ -214,10 +210,10 @@ echo "-------- Running metgrid.exe --------"
 cp "$WPS_SRC_DIR/util/avg_tsfc.exe" .
 cp "$WPS_SRC_DIR/metgrid.exe" .
 
-mkdir metgrid
-ln -sf "$SLURM_SUBMIT_DIR/METGRID.TBL" metgrid/METGRID.TBL
+mkdir -v metgrid
+ln -sf "$WPS_SRC_DIR/metgrid/METGRID.TBL" metgrid/METGRID.TBL
 
-# In order to use the daily averaged skin temperature for lakes, tavgsfc (thus also metgrid) 
+# In order to use the daily averaged skin temperature for lakes, tavgsfc (thus also metgrid)
 # should be run once per day
 date_s_met=$(date +"%Y%m%d" -d "$date_s")
 # Loop on run days
@@ -253,11 +249,11 @@ rm -rf metgrid
 
 if $USE_CHLA_DMS_WPS; then
   #---- Add chlorophyll-a oceanic concentrations to met_em*
-  echo "python -u add_chloroa_wps.py $SCRATCH/ ${date_s} ${date_e}" 
+  echo "python -u add_chloroa_wps.py $SCRATCH/ ${date_s} ${date_e}"
   python -u add_chloroa_wps.py "$SCRATCH/" "${date_s}" "${date_e}"
 
   #---- Add DMS oceanic concentrations to met_em*
-  echo "python -u add_dmsocean_wps.py $SCRATCH/ ${date_s} ${date_e}" 
+  echo "python -u add_dmsocean_wps.py $SCRATCH/ ${date_s} ${date_e}"
   python -u add_dmsocean_wps.py "$SCRATCH/" "${date_s}" "${date_e}"
 fi
 
@@ -266,4 +262,3 @@ mv ./geo_em*nc ./met_em* "$OUTDIR/"
 mv ./*.log "$OUTDIR/"
 mv namelist.wps "$OUTDIR/"
 rm -rf "$SCRATCH"
-
