@@ -5,7 +5,7 @@ requires-python = ">= 3.13"
 # standard, and until recently some of the WRF files did not follow this
 # standard (compilation fails in this case). If we want to be able to compile
 # reasonably old versions of WRF, we need to keep using GCC<15 for now,
-# cf. https://github.com/Regional-Modeling-LATMOS-IGE/WRF-Chem-Polar/issues/56.
+# cf. https://github.com/WRF-Chem-Polar/WRF-Chem-Polar/issues/56.
 dependencies = [
     "gcc<15",
     "gfortran",
@@ -27,8 +27,12 @@ wrfpp = [
     "xarray",
     "cartopy",
 ]
+# We add Emacs and Vim to our "dev" dependencies to benefit from modern
+# features such as "auto format with ruff on save"
 dev = [
-    "ruff"
+    "ruff",
+    "emacs",
+    "vim",
 ]
 data = [
     "copernicusmarine"
