@@ -453,6 +453,11 @@ class WRFDatasetAccessor(GenericDatasetAccessor):
         return WRFAccumulatedPrecipitation(self._dataset)
 
     @property
+    def grid_cell_area(self):
+        """The DerivedVariable object to calculate grid cell area."""
+        return WRFGridCellArea(self._dataset)
+
+    @property
     def altitude_asl(self):
         """The DerivedVariable object to calculate grid cell height above sea level."""
         return WRFAltitudeASL(self._dataset)
@@ -721,6 +726,35 @@ class WRFAccumulatedPrecipitation(DerivedVariable):
             attrs=dict(
                 long_name="Accumulated total precipitation", units="mm"
             ),
+        )
+
+
+class WRFGridCellArea(DerivedVariable):
+    """Derived variable for calcuating grid cell (box) area from WRF outputs."""
+
+    def __getitem__(self, *args):
+        """grid cell (box) area.
+
+        Parameters
+        ----------
+        *args: slice
+            Slice of interest in the WRF output.
+
+        Return
+        ------
+        xarray.DataArray
+            The grid cell (box) area in m2.
+
+        """
+        wrf = self._dataset.wrf
+        dx = wrf.attrs["DX"]
+        dy = wrf.attrs["DY"]
+        mapfrac_m = wrf["MAPFAC_M"].__getitem__(*args)
+        grid_cell_area = dx * dy / (mapfrac_m * mapfrac_m)
+        return xr.DataArray(
+            grid_cell_area,
+            name="grid cell area",
+            attrs=dict(long_name="Grid Cell Area", units="m2"),
         )
 
 
