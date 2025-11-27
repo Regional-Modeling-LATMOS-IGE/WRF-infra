@@ -734,14 +734,17 @@ class WRFGridCellArea(DerivedVariable):
 
     def __getitem__(self, *args):
         """grid cell (box) area.
+
         Parameters
         ----------
         *args: slice
             Slice of interest in the WRF output.
+
         Return
         ------
         xarray.DataArray
             The grid cell (box) area in m2.
+
         """
         wrf = self._dataset.wrf
         dx = wrf.attrs["DX"]
