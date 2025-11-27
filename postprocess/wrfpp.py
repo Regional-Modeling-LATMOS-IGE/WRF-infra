@@ -120,11 +120,6 @@ def nearest_indices(lon, lat, gridlons, gridlats, dx, dy):
     -------
     tuple of int
         Indices (j, i) of the nearest grid point.
-
-    Raises
-    ------
-    ValueError
-        If the target point lies outside the model domain.
     """
     geod = pyproj.Geod(ellps="WGS84")
     _, _, dists = geod.inv(
@@ -133,10 +128,6 @@ def nearest_indices(lon, lat, gridlons, gridlats, dx, dy):
         gridlons,
         gridlats,
     )
-
-    max_dist = np.sqrt(dx**2 + dy**2) / 2
-    if np.amin(dists) > max_dist:
-        raise ValueError(f"Point ({lat}, {lon}) is outside model domain.")
 
     j, i = np.unravel_index(np.argmin(dists), gridlons.shape)
     return j, i
@@ -515,8 +506,15 @@ class WRFDatasetAccessor(GenericDatasetAccessor):
                 f"Invalid mode: {method!r}. Expected one of {allowed}."
             )
 
-        # Get (i,j) indices of model gridpoint containing (lon,lat)
+        # Test if point is inside model domain
         wrflons, wrflats = self.lonlat
+        xx, yy = self.ll2xy(wrflons, wrflats)
+        x, y = self.ll2xy(lon, lat)
+        if (x<np.amin(xx) or x>np.amax(xx)
+            or y<np.amin(yy) or y>np.amax(yy)):
+            raise ValueError(f"Point ({lon}, {lat}) is outside model domain.")
+
+        # Get (i,j) indices of model gridpoint containing (lon,lat)
         j, i = nearest_indices(
             lon,
             lat,
