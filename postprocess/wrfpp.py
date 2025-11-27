@@ -511,8 +511,12 @@ class WRFDatasetAccessor(GenericDatasetAccessor):
         wrflons, wrflats = self.lonlat
         xx, yy = self.ll2xy(wrflons, wrflats)
         x, y = self.ll2xy(lon, lat)
-        if (x<np.amin(xx) or x>np.amax(xx)
-            or y<np.amin(yy) or y>np.amax(yy)):
+        if (
+            x < np.amin(xx)
+            or x > np.amax(xx)
+            or y < np.amin(yy)
+            or y > np.amax(yy)
+        ):
             raise ValueError(f"Point ({lon}, {lat}) is outside model domain.")
 
         # Get (i,j) indices of model gridpoint containing (lon,lat)
