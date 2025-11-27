@@ -105,12 +105,13 @@ def _units_mpl(units):
 
 
 def nearest_indices(lon, lat, gridlons, gridlats, dx, dy):
-    """Return indices (j, i) of gridpoint nearest to (lon, lat).
+    """Return indices (i, j) of gridpoint nearest to (lon, lat).
 
     Parameters
     ----------
     lat, lon : float or int
-        Target coordinate in degrees.
+        Target coordinate in degrees. Longitude can be in [-180,180] or
+        in [0, 360].
     gridlons, gridlats : np.ndarray
         2D arrays of longitudes and latitudes for the model grid.
     dx, dy : float
@@ -119,7 +120,7 @@ def nearest_indices(lon, lat, gridlons, gridlats, dx, dy):
     Returns
     -------
     tuple of int
-        Indices (j, i) of the nearest grid point.
+        Indices (i, j) of the nearest grid point.
     """
     geod = pyproj.Geod(ellps="WGS84")
     _, _, dists = geod.inv(
@@ -130,7 +131,7 @@ def nearest_indices(lon, lat, gridlons, gridlats, dx, dy):
     )
 
     j, i = np.unravel_index(np.argmin(dists), gridlons.shape)
-    return j, i
+    return i, j
 
 
 class GenericDatasetAccessor(ABC):
@@ -476,7 +477,7 @@ class WRFDatasetAccessor(GenericDatasetAccessor):
         lat : float or int
             The target latitude value
         lon : float or int
-            The target longitude value
+            The target longitude value, in [-180,180] or in [0, 360].
         method : {"centre", "mean", "min", "max"}, default="centre"
             Determines which value to return:
             - "centre": the gridpoint containing the target coordinate.
@@ -515,7 +516,7 @@ class WRFDatasetAccessor(GenericDatasetAccessor):
             raise ValueError(f"Point ({lon}, {lat}) is outside model domain.")
 
         # Get (i,j) indices of model gridpoint containing (lon,lat)
-        j, i = nearest_indices(
+        i, j = nearest_indices(
             lon,
             lat,
             wrflons,
