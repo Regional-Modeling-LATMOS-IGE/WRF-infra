@@ -6,27 +6,27 @@
 
 # Resources used
 #SBATCH --nodes=1
-#SBATCH --ntasks-per-node=4
-#SBATCH --mem=8G
-#SBATCH --time=03:00:00
+#SBATCH --ntasks-per-node=32
+#SBATCH --mem=60G
+#SBATCH --time=24:00:00
 
 
 #-------- Input --------
 CASENAME='WRF_CHEM_TEST'
-CASENAME_COMMENT='MOZART_MOSAIC'
+CASENAME_COMMENT='MOZARTMOSAIC'
 
 # Root directory with the compiled WRF executables (main/wrf.exe and main/real.exe)
-WRFDIR=~/WRF/src/WRF-Chem-Polar/WRFV4
+WRFDIR=~/WRF/src/WRF-Chem-Polar
 
 # Simulation start year and month
 yys=2012
-mms=02
-dds=15
+mms=03
+dds=01
 hhs=00
 # Simulation end year, month, day, hour
 yye=2012
-mme=02
-dde=16
+mme=03
+dde=08
 hhe=00
 
 NAMELIST="namelist.input.YYYY"
@@ -34,11 +34,11 @@ NAMELIST="namelist.input.YYYY"
 
 #-------- Parameters --------
 # Root directory for WRF input/output
-OUTDIR_ROOT="/data/$(whoami)/WRF/WRF_OUTPUT"
+OUTDIR_ROOT="/data/$(whoami)/WRFChem/"
 SCRATCH_ROOT="/scratchu/$(whoami)"
 INDIR_ROOT="$OUTDIR_ROOT"
 # WRF-Chem input data directory
-WRFCHEM_INPUT_DATA_DIR="/data/marelle/marelle/WRFChem/wrf_utils/wrfchem_input"
+WRFCHEM_INPUT_DATA_DIR="/proju/wrf-chem/input-data/"
 
 
 #-------- Set up job environment --------
@@ -148,12 +148,12 @@ done
 cp "${REALDIR}/exo_coldens_d01" "$SCRATCH/"
 cp "${REALDIR}/wrf_season_wes_usgs_d01.nc" "$SCRATCH/"
 # Only needed for TUV photolysis
-cp "$WRFCHEM_INPUT_DATA_DIR/upper_bdy/wrf_tuv_xsqy.nc" "$SCRATCH/"
-cp -r "$WRFCHEM_INPUT_DATA_DIR/upper_bdy/DATA"?? "$SCRATCH/"
+cp "$WRFCHEM_INPUT_DATA_DIR/photolysis/wrf_tuv_xsqy.nc" "$SCRATCH/"
+cp -r "$WRFCHEM_INPUT_DATA_DIR/photolysis/DATA"?? "$SCRATCH/"
 
 # Transfer other input data
-cp "$WRFCHEM_INPUT_DATA_DIR/upper_bdy/clim_p_trop.nc" "$SCRATCH/"
-cp "$WRFCHEM_INPUT_DATA_DIR/upper_bdy/ubvals_b40.20th.track1_1996-2005.nc" "$SCRATCH/"
+cp "$WRFCHEM_INPUT_DATA_DIR/upper_boundary_chem/clim_p_trop.nc" "$SCRATCH/"
+cp "$WRFCHEM_INPUT_DATA_DIR/upper_boundary_chem/ubvals_b40.20th.track1_1996-2005.nc" "$SCRATCH/"
 
 # Run WRF --------
 echo " "
