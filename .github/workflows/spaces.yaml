@@ -19,7 +19,5 @@ jobs:
               find . | grep -E "[[:space:]]"
               exit 1
           fi
-      - name: Make the script that checks for trailing spaces executable
-        run: chmod 500 ./tools/check-trailing-spaces.bash
       - name: Run the script that checks for trailing spaces
-        run: ./tools/check-trailing-spaces.bash .
+        run: bash ./tools/check-trailing-spaces.bash .
