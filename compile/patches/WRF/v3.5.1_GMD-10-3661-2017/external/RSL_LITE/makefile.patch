@@ -1,0 +1,33 @@
+--- makefile	2025-11-16 15:42:21.650576573 +0100
++++ makefile.new	2025-11-16 15:43:26.115589237 +0100
+@@ -5,7 +5,7 @@
+ LIBS    = 
+ M4      = m4 -Uinclude -Uindex -Ulen
+ AR      = ar
+-CFLAGS = 
++CFLAGS = -Wno-implicit-int
+ CPPFLAGS =
+ FFLAGS =
+ 
+@@ -19,7 +19,7 @@
+ 			$(AR) cr librsl_lite.a $(OBJSL)
+ 
+ c_code.o:	        c_code.c
+-			$(CC) $(CFLAGS) -c c_code.c
++			$(CC) -Wno-return-mismatch $(CFLAGS) -c c_code.c
+ 
+ period.o:	        period.c
+ 			$(CC) $(CFLAGS) -c period.c
+@@ -31,10 +31,10 @@
+ 			$(CC) $(CFLAGS) -c cycle.c
+ 
+ rsl_bcast.o:	        rsl_bcast.c
+-			$(CC) $(CFLAGS) -c rsl_bcast.c
++			$(CC) -Wno-return-mismatch $(CFLAGS) -c rsl_bcast.c
+ 
+ rsl_malloc.o:	        rsl_malloc.c
+-			$(CC) $(CFLAGS) -c rsl_malloc.c
++			$(CC) -Wno-return-mismatch $(CFLAGS) -c rsl_malloc.c
+ 
+ task_for_point.o:	task_for_point.c
+ 			$(CC) $(CFLAGS) -c task_for_point.c

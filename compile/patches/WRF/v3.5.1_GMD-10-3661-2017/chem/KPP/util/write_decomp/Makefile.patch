@@ -1,0 +1,11 @@
+--- Makefile	2025-11-16 15:33:25.821816012 +0100
++++ Makefile.new	2025-11-16 15:35:22.473021658 +0100
+@@ -56,7 +56,7 @@
+ 
+ .c.o:
+ 	$(RM) $@
+-	$(SCC) -c $(CFLAGS) $*.c
++	$(SCC) -Wno-implicit-int -c $(CFLAGS) $*.c
+ 
+ clean: 
+ 	$(RM) *.o *.tmp *.mod module_kpp_* *~ *.inc *.exe *.f90

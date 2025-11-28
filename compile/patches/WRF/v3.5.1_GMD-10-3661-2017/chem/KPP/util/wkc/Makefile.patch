@@ -1,0 +1,11 @@
+--- Makefile	2025-11-16 15:24:08.032396924 +0100
++++ Makefile.new	2025-11-16 15:24:56.576649333 +0100
+@@ -4,7 +4,7 @@
+ 
+ include ../../configure.kpp
+ 
+-CFLAGS = #-ansi
++CFLAGS = -Wno-implicit-function-declaration -Wno-return-mismatch  -Wno-implicit-int
+ LDFLAGS =
+ DEBUG = -g 
+ OBJ = registry_kpp.o  my_strtok.o data.o type.o misc.o reg_parse.o \

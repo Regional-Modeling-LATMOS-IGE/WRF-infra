@@ -1,0 +1,25 @@
+--- configure.defaults	2025-11-17 11:20:14.199978191 +0100
++++ configure.defaults.new	2025-11-17 11:23:07.387457854 +0100
+@@ -130,10 +130,10 @@
+ COMPRESSION_LIBS    = CONFIGURE_COMP_L
+ COMPRESSION_INC     = CONFIGURE_COMP_I
+ FDEFS               = CONFIGURE_FDEFS
+-SFC                 = gfortran
++SFC                 = gfortran -fallow-argument-mismatch
+ SCC                 = gcc
+-DM_FC               = mpif90 -f90=gfortran
+-DM_CC               = mpicc -cc=gcc 
++DM_FC               = mpif90 -fallow-argument-mismatch
++DM_CC               = mpicc
+ FC                  = CONFIGURE_FC 
+ CC                  = CONFIGURE_CC
+ LD                  = $(FC)
+@@ -143,7 +143,7 @@
+ FNGFLAGS            = $(FFLAGS)
+ LDFLAGS             =
+ CFLAGS              =
+-CPP                 = /usr/bin/cpp -C -P -traditional
++CPP                 = /usr/bin/cpp -C -P -traditional -nostdinc
+ CPPFLAGS            = -D_UNDERSCORE -DBYTESWAP -DLINUX -DIO_NETCDF -DBIT32 -DNO_SIGNAL CONFIGURE_MPI
+ RANLIB              = ranlib 
+ 

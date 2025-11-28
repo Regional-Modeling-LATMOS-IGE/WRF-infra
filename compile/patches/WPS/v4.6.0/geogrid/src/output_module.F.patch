@@ -1,0 +1,10 @@
+--- output_module_old.F	2025-10-27 09:49:57.978215125 +0100
++++ output_module.F	2025-10-27 09:51:29.709890692 +0100
+@@ -469,6 +469,7 @@
+       ifieldstatus = 0
+       nfields = 0
+       optstatus = 0
++      is_subgrid_var = .false.
+       do while (ifieldstatus == 0)
+    
+          call get_next_output_fieldname(nest_num, fieldname, ndims, &
