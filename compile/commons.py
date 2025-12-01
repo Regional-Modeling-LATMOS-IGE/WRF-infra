@@ -168,9 +168,8 @@ def run_stdout(args, **kwargs):
         If the command returns a non-zero exit code.
 
     """
-    for kwarg in ("capture_output", "text"):
-        if kwarg in kwargs:
-            raise ValueError("Keyword argument %s is forbidden." % kwarg)
+    if any(kwarg in kwargs for kwarg in ("capture_output", "text")):
+        raise ValueError("Keyword argument %s is forbidden." % kwarg)
     out = run(args, capture_output=True, text=True, **kwargs)
     return out.stdout[:-1].split("\n")
 
