@@ -29,8 +29,7 @@ def prepare_components(opts):
     valid_comps = [comp.split(")")[0].strip() for comp in valid_comps]
     if any(comp not in valid_comps for comp in opts.components):
         raise RuntimeError("There are some invalid WRF extra components.")
-    components = " ".join(opts.components)
-    return components if len(components) == 0 else " " + components
+    return " " + " ".join(opts.components) if opts.components else ""
 
 
 def prepare_environment_variables(opts):
