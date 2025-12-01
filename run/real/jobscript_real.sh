@@ -11,7 +11,7 @@
 
 CONDA_EXE="/proju/wrf-chem/software/micromamba/micromamba"
 CONDA_ROOT_PREFIX="/proju/wrf-chem/software/conda-envs/shared"
-CONDA_ENV_NAME="WRF-Chem-Polar_2025-10-21"
+CONDA_ENV_NAME="WRF-Chem-Polar"
 CONDA_RUN="$CONDA_EXE run --root-prefix=$CONDA_ROOT_PREFIX --name=$CONDA_ENV_NAME"
 
 #-------- Input --------

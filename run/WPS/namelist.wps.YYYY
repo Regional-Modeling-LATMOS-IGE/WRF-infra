@@ -21,7 +21,6 @@
  ref_lat   = 84.,
  ref_lon   = -25.,
  truelat1  = 84.,
- truelat2  = 84.,
  stand_lon = -25.,
  geog_data_path = '/proju/wrf-chem/input-data/wps_static/wps_v4'
 /
