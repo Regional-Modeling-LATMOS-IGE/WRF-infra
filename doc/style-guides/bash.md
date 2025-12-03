@@ -13,17 +13,39 @@ Rationale:
 - save our pinkie fingers some needless strain.
 - use the same convention we use for Python code.
 
+## Quotes
+
+Do not use unnecessary quotes:
+
+
+```sh
+# Not OK
+my_variable="/home/myself"
+
+# OK
+my_variable=/home/myself
+```
+
+Rationale: this is simpler and more readable.
+
+Where quotes are needed, use double-quotes by default, and single quotes where needed, for example:
+
+```sh
+# OK
+echo 'I want to show you what the dollar sign looks like: $'
+```
+
 ## Single versus double brackets
 
 We use double brackets. Everywhere. For example:
 
 ```sh
-# Not ok
+# Not OK
 if [ $myvar = 42 ]; then
     echo "this is the answer"
 fi
 
-# Ok
+# OK
 if [[ $myvar = 42 ]]; then
     echo "this is the answer"
 fi
