@@ -4,6 +4,12 @@ There is a lot of debate out there about using POSIX-compliant versus Bash-speci
 
 Here we do not write system-level code; we write user-level code. We do not need portabaly outside of Bash because any self-respecting user-oriented Unix-like system has a Bash interpreter. We prefer cleaner, less error-prone code. We therefore do not restrain ourselves from using Bash-specific syntax.
 
+## Indentation
+
+Use 4 spaces (no tabs) for each level of indentation.
+
+Rationale: isn't that a universally accepted convention?
+
 ## Variable names
 
 Use lower case names for variables, and use underscores as needed to improve readabilty.
