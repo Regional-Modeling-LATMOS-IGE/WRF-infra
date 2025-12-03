@@ -61,6 +61,22 @@ Rationale: the double brackets syntax is a Bash-specific feature that is more po
 
 # Double parentheses versus double brackets
 
+Use double square brackets everywhere you can. Use double parentheses when you actually need arithmetics.
+
+```sh
+# OK
+if [[ $my_var -eq 0 ]]; then
+    echo "my_var is zero"
+fi
+
+# Not OK
+if (( my_var==0 )); then
+    echo "my_var is zero"
+fi
+```
+
+Rationale: with this choice, the syntax is generally more consistent throughout scripts. We rarely need to perform many arithemetic operations in a Bash script. If you do, you should probably use Python instead.
+
 # -eq, ==, =
 
 # Function docstrings
