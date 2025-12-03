@@ -5,7 +5,7 @@
 # License: BSD 3-clause "new" or "revised" license (BSD-3-Clause).
 #
 # This file contains unit tests for ./commons.bash (the common bash resources
-# for our WPS, WRF, and WRF-Chem runs). When executed, it exits with a zero
+# for our WPS and WRF[-Chem] simulations). When executed, it exits with a zero
 # error code if all tests pass, and with a non-zero error code otherwise.
 #
 

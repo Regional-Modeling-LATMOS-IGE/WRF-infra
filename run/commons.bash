@@ -4,7 +4,7 @@
 #
 # License: BSD 3-clause "new" or "revised" license (BSD-3-Clause).
 #
-# This file contains common resources for running WPS, WRF, and WRF-Chem.
+# This file contains common resources for running WPS and WRF[-Chem].
 #
 
 function check_paths {
@@ -27,6 +27,7 @@ function check_paths {
     # - The path contains no spaces.
     #
     for arg in "$@"; do
+        echo "check_paths: checking path: $arg"
         if [[ $(echo $arg | grep -cE "[[:space:]]") -ne 0 ]]; then
             return 1
         elif [[ -z $arg ]]; then
@@ -35,3 +36,16 @@ function check_paths {
     done
     return 0
 }
+
+if [[ $run_commons_tests -eq yes ]]; then
+
+    echo "Running tests on the simulation's configuration..."
+
+    check_paths "$(pwd)"
+    check_paths "$dir_wps"
+    check_paths "$dir_outputs"
+    check_paths "$dir_work"
+    check_paths "$dir_grib"
+    check_paths "$namelist_wps"
+
+fi
