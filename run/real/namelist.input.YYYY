@@ -45,12 +45,12 @@
  time_step_fract_den                 = 1,
 ! The following lines should match namelist.wps
  max_dom                             = 1,
- e_we                                = 50,    111,   100,
- e_sn                                = 51,    111,   100,
+ e_we                                = 86,    111,   100,
+ e_sn                                = 86,    111,   100,
  e_vert                              = 50,     72,    72,
  p_top_requested                     = 5000,
  ! 38 for ERAI, 27 for FNL
- num_metgrid_levels                  = 27,
+ num_metgrid_levels                  = 38,
  num_metgrid_soil_levels             = 4,
  dx                                  = 100000, 20000,  1000,
  dy                                  = 100000, 20000,  1000,

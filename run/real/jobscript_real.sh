@@ -7,25 +7,29 @@
 # Resources used
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
-#SBATCH --time=01:00:00
+#SBATCH --time=06:00:00
 
+CONDA_EXE="/proju/wrf-chem/software/micromamba/micromamba"
+CONDA_ROOT_PREFIX="/proju/wrf-chem/software/conda-envs/shared"
+CONDA_ENV_NAME="WRF-Chem-Polar"
+CONDA_RUN="$CONDA_EXE run --root-prefix=$CONDA_ROOT_PREFIX --name=$CONDA_ENV_NAME"
 
 #-------- Input --------
 CASENAME='WRF_CHEM_TEST'
 CASENAME_COMMENT='MOZARTMOSAIC'
 
 # Root directory with the compiled WRF executables (main/wrf.exe and main/real.exe)
-WRFDIR=~/WRF/src/WRF-Chem-Polar/WRFV4
+WRFDIR=~/WRF/src/WRF-Chem-Polar
 
 # Simulation start year and month
 yys=2012
-mms=02
-dds=15
+mms=03
+dds=01
 hhs=00
 # Simulation end year, month, day, hour
 yye=2012
-mme=02
-dde=16
+mme=03
+dde=08
 hhe=00
 
 NAMELIST="namelist.input.YYYY"
@@ -33,10 +37,10 @@ NAMELIST="namelist.input.YYYY"
 
 #-------- Parameters --------
 # Root directory for WRF input/output
-OUTDIR_ROOT="/data/$(whoami)/WRF/WRF_OUTPUT"
+OUTDIR_ROOT="/data/$(whoami)/WRFChem/"
 SCRATCH_ROOT="/scratchu/$(whoami)"
 # WRF-Chem input data directory
-WRFCHEM_INPUT_DATA_DIR="/data/marelle/marelle/WRF/wrfchem-input-data"
+WRFCHEM_INPUT_DATA_DIR="/proju/wrf-chem/input-data/"
 
 
 #-------- Set up job environment --------
@@ -144,7 +148,7 @@ echo " "
 echo "-------- $SLURM_JOB_NAME: run megan_bio_emiss --------"
 echo " "
 # megan_bio_emiss often SIGSEGVs at the end but this is not an issue
-MEGANEMIS_DIR="$WRFCHEM_INPUT_DATA_DIR/bio_emissions/megan_bio_emiss"
+MEGANEMIS_DIR="$WRFCHEM_INPUT_DATA_DIR/natural_emissions/terrestrial/megan"
 ln -s "${MEGANEMIS_DIR}/"*".nc" .
 sed -i "s:MEGANEMIS_DIR:${MEGANEMIS_DIR}:g" megan_bioemiss.inp
 sed -i "s:WRFRUNDIR:$PWD/:g" megan_bioemiss.inp
@@ -186,7 +190,7 @@ echo " "
 echo "-------- $SLURM_JOB_NAME: run mozbc --------"
 echo " "
 # Find the boundary condition file autmatically in MOZBC_DIR, assuming it is called e.g. cesm-201202.nc
-MOZBC_DIR='/data/marelle/marelle/WRF/wrfchem-input-data/initial_boundary_conditions/mozbc/camchem/'
+MOZBC_DIR="$WRFCHEM_INPUT_DATA_DIR/chem_boundary/cesm/"
 MOZBC_FILE="$(ls -1 --color=never "$MOZBC_DIR/cesm-$yys$mms"*".nc" | xargs -n 1 basename | tail -n1)"
 echo "Run MOZBC for $MOZBC_DIR/$MOZBC_FILE"
 if [ -f "$MOZBC_DIR/$MOZBC_FILE" ]; then
@@ -208,9 +212,10 @@ echo "-------- $SLURM_JOB_NAME: run wesely and exo_coldens --------"
 echo " "
 sed -i "s:WRFRUNDIR:$PWD/:g" wesely.inp
 sed -i "s:WRFRUNDIR:$PWD/:g" exo_coldens.inp
-cp "$WRFCHEM_INPUT_DATA_DIR/wes-coldens/"*"nc" "$SCRATCH"
+cp "$WRFCHEM_INPUT_DATA_DIR/dry_deposition/"*"nc" "$SCRATCH"
 wesely < wesely.inp >  wesely.out
 tail wesely.out
+cp "$WRFCHEM_INPUT_DATA_DIR/photolysis/"*"nc" "$SCRATCH"
 exo_coldens < exo_coldens.inp > exo_coldens.out
 tail exo_coldens.out
 # Bug fix, XLONG can sometimes be empty in exo_coldens_dXX
@@ -221,10 +226,10 @@ ncks -A -v XLONG,XLAT wrfinput_d01 exo_coldens_d01
 echo " "
 echo "-------- $SLURM_JOB_NAME: run fire_emis --------"
 echo " "
-# Find the fire emission file autmatically in FIREEMIS_DIR, assuming it is called e.g. GLOBAL_FINNv15_2012_MOZART.txt
+# Find the fire emission file autmatically in FIREEMIS_DIR, assuming it is called e.g. GLOBAL_FINNv1.5_2012.MOZ.txt
 #TODO update to latest version
-FIREEMIS_DIR='/data/marelle/marelle/WRF/wrfchem-input-data/fire_emissions/'
-FIREEMIS_FILE="$(ls -1 --color=never "$FIREEMIS_DIR/"*"v15"*"_${yys}_"*"MOZ"*".txt" | xargs -n 1 basename | tail -n1)"
+FIREEMIS_DIR="$WRFCHEM_INPUT_DATA_DIR/fire_emissions/finn/version1/"
+FIREEMIS_FILE="$(ls -1 --color=never "$FIREEMIS_DIR/"*"v1.5"*"_${yys}"*"MOZ"*".txt" | xargs -n 1 basename | tail -n1)"
 echo "Run FIREEMIS for $FIREEMIS_DIR/$FIREEMIS_FILE"
 if [ -f "$FIREEMIS_DIR/$FIREEMIS_FILE" ]; then
   sed -i "s:fire_directory    = .*:fire_directory    = \'$FIREEMIS_DIR\',:g" fire_emis_mozartmosaic.inp
@@ -243,8 +248,9 @@ tail fire_emis.out
 echo " "
 echo "-------- $SLURM_JOB_NAME: run emission script --------"
 echo " "
+ANTHRO_EMS_DIR="$WRFCHEM_INPUT_DATA_DIR/anthro_emissions/cams/"
 cp "$SLURM_SUBMIT_DIR/cams2wrfchem.py" "$SCRATCH/"
-python -u cams2wrfchem.py --start ${date_s} --end ${date_e} --domain 1
+$CONDA_RUN python -u cams2wrfchem.py --start ${date_s} --end ${date_e} --domain 1 --dir-em-in ${ANTHRO_EMS_DIR}
 
 #---- Initialize snow on sea ice
 echo " "

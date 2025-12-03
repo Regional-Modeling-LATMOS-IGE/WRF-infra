@@ -19,7 +19,7 @@ simudir = sys.argv[1]
 #--- directory containing the gridded chlorophyll-a surface concentration
 #--- this product can be downloaded from
 #--- https://data.marine.copernicus.eu/product/GLOBAL_MULTIYEAR_BGC_001_029/download?dataset=cmems_mod_glo_bgc_my_0.25_P1D-m_202112
-chloroadir = '/data/marelle/marelle/EMISSIONS/CHLOROA'
+chloroadir = '/proju/wrf-chem/input-data/natural_emissions/ocean/chl-a/copernicus_marine/'
 
 #--- first date of simulation
 date1 = sys.argv[2]

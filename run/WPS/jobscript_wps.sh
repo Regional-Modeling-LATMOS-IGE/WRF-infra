@@ -12,29 +12,34 @@
 #SBATCH --ntasks-per-node=1
 #SBATCH --time=01:00:00
 
+#----------- Set up shared python environment -----------
+CONDA_EXE="/proju/wrf-chem/software/micromamba/micromamba"
+CONDA_ROOT_PREFIX="/proju/wrf-chem/software/conda-envs/shared"
+CONDA_ENV_NAME="WRF-Chem-Polar"
+CONDA_RUN="$CONDA_EXE run --root-prefix=$CONDA_ROOT_PREFIX --name=$CONDA_ENV_NAME"
 
 #-------- Input --------
 CASENAME='WRF_CHEM_TEST'
 
 # Directory containing the WPS executables and inputs
-WPS_SRC_DIR=~/WRF/src/WPS/
+WPS_SRC_DIR=/home/marelle/WRF/src/WPS/
 
 # Simulation start year and month
 yys=2012
-mms=02
-dds=15
+mms=03
+dds=01
 hhs=00
 # Simulation end year, month, day, hour
 yye=2012
-mme=02
-dde=16
+mme=03
+dde=08
 hhe=00
 
 NAMELIST="namelist.wps.YYYY"
 
 # Select the input data.
 # 0=ERA5 reanalysis, 1=ERA-INTERIM reanalysis 2=NCEP/FNL reanalysis
-INPUT_DATA_SELECT=2
+INPUT_DATA_SELECT=0
 
 # Specifiy whether to write chl-a and DMS in met_em files
 # set to true to call add_chloroa_wps.py and add_dmsocean_wps.py
@@ -44,18 +49,11 @@ USE_CHLA_DMS_WPS=true
 #-------- Parameters --------
 # Root directory for WPS input/output
 # Change this to your own /data or /proju directory
-OUTDIR_ROOT="/data/$(whoami)/WRF/WRF_OUTPUT"
+OUTDIR_ROOT="/data/$(whoami)/WRFChem/"
 SCRATCH_ROOT="/scratchu/$(whoami)"
 
 # Directory containing the GRIB file inputs for ungrib
-if ((INPUT_DATA_SELECT==0 || INPUT_DATA_SELECT==1)); then
-  GRIB_DIR="/data/marelle/marelle/met_data/"
-elif ((INPUT_DATA_SELECT==2 )); then
-  GRIB_DIR="/data/onishi/onishi/FNL/ds083.2/"
-else
-  echo "Error, INPUT_DATA_SELECT=$INPUT_DATA_SELECT is not recognized"
-fi
-
+GRIB_DIR="/proju/wrf-chem/input-data/met_boundary/"
 
 #-------- Set up job environment --------
 # Load modules used for WPS compilation
@@ -161,16 +159,18 @@ mkdir -v grib_links
 date_ungrib=$(date +"%Y%m%d" -d "$date_s")
 while (( $(date -d "$date_ungrib" "+%s") <= $(date -d "$date_e" "+%s") )); do
   if (( INPUT_DATA_SELECT==0 )); then
-    ln -sf "$GRIB_DIR/ERA5/ERA5_grib1_invariant_fields/e5.oper.invariant."* grib_links/
-    ln -sf "$GRIB_DIR/ERA5/ERA5_grib1_$(date +"%Y" -d "$date_ungrib")/e5"*"pl"*"$(date +"%Y%m" -d "$date_ungrib")"* grib_links/
-    ln -sf "$GRIB_DIR/ERA5/ERA5_grib1_$(date +"%Y" -d "$date_ungrib")/e5"*"sfc"*"$(date +"%Y%m" -d "$date_ungrib")"* grib_links/
+    ln -sf "$GRIB_DIR/era5/ERA5_grib1_invariant_fields/e5.oper.invariant."* grib_links/
+    ln -sf "$GRIB_DIR/era5/ERA5_grib1_$(date +"%Y" -d "$date_ungrib")/e5"*"pl"*"$(date +"%Y%m" -d "$date_ungrib")"* grib_links/
+    ln -sf "$GRIB_DIR/era5/ERA5_grib1_$(date +"%Y" -d "$date_ungrib")/e5"*"sfc"*"$(date +"%Y%m" -d "$date_ungrib")"* grib_links/
   # ERA-interim input
   elif (( INPUT_DATA_SELECT==1 )); then
+    # NB we updated the $GRIB_DIR file path but the new path doesn't contain ERA-I
+    # so these lines will fail
     ln -sf "$GRIB_DIR/ERAI/ERA-Int_grib1_$(date +"%Y" -d "$date_ungrib")/ei.oper."*"pl"*"$(date +"%Y%m%d" -d "$date_ungrib")"* grib_links/
     ln -sf "$GRIB_DIR/ERAI/ERA-Int_grib1_$(date +"%Y" -d "$date_ungrib")/ei.oper."*"sfc"*"$(date +"%Y%m%d" -d "$date_ungrib")"* grib_links/
   # FNL input
   elif (( INPUT_DATA_SELECT==2 )); then
-    ln -sf "$GRIB_DIR/FNL$(date +"%Y" -d "$date_ungrib")/fnl_$(date +"%Y%m%d" -d "$date_ungrib")"* grib_links/
+    ln -sf "$GRIB_DIR/fnl/ds083.2/FNL$(date +"%Y" -d "$date_ungrib")/fnl_$(date +"%Y%m%d" -d "$date_ungrib")"* grib_links/
   fi
   # Go to the next date to ungrib
   date_ungrib=$(date +"%Y%m%d" -d "$date_ungrib + 1 day");
@@ -250,11 +250,11 @@ rm -rf metgrid
 if $USE_CHLA_DMS_WPS; then
   #---- Add chlorophyll-a oceanic concentrations to met_em*
   echo "python -u add_chloroa_wps.py $SCRATCH/ ${date_s} ${date_e}"
-  python -u add_chloroa_wps.py "$SCRATCH/" "${date_s}" "${date_e}"
+  $CONDA_RUN python -u add_chloroa_wps.py "$SCRATCH/" "${date_s}" "${date_e}"
 
   #---- Add DMS oceanic concentrations to met_em*
   echo "python -u add_dmsocean_wps.py $SCRATCH/ ${date_s} ${date_e}"
-  python -u add_dmsocean_wps.py "$SCRATCH/" "${date_s}" "${date_e}"
+  $CONDA_RUN python -u add_dmsocean_wps.py "$SCRATCH/" "${date_s}" "${date_e}"
 fi
 
 #-------- Clean up --------
