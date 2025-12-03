@@ -47,12 +47,12 @@ We use double brackets. Everywhere. For example:
 
 ```sh
 # Not OK
-if [ $myvar = 42 ]; then
+if [ $myvar -eq 42 ]; then
     echo "this is the answer"
 fi
 
 # OK
-if [[ $myvar = 42 ]]; then
+if [[ $myvar -eq 42 ]]; then
     echo "this is the answer"
 fi
 ```
