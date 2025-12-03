@@ -59,7 +59,7 @@ fi
 
 Rationale: the double brackets syntax is a Bash-specific feature that is more powerful than the POSIX-compliant single bracket. Double brackets are also safer to use when variables are undefined. In the example above, if `$myvar` is undefined, the single bracket syntax will result in a syntax-like error while the double bracket syntax will work as expected.
 
-# Double parentheses versus double brackets
+# Double square brackets versus double parentheses
 
 Use double square brackets everywhere you can. Use double parentheses when you actually need arithmetics.
 
