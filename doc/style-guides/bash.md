@@ -4,6 +4,15 @@ There is a lot of debate out there about using POSIX-compliant versus Bash-speci
 
 Here we do not write system-level code; we write user-level code. We do not need portabaly outside of Bash because any self-respecting user-oriented Unix-like system has a Bash interpreter. We prefer cleaner, less error-prone code. We therefore do not restrain ourselves from using Bash-specific syntax.
 
+## Variable names
+
+Use lower case names for variables, and use underscores as needed to improve readabilty.
+
+Rationale:
+
+- save our pinkie fingers some needless strain.
+- use the same convention we use for Python code.
+
 ## Single versus double brackets
 
 We use double brackets. Everywhere. For example:
