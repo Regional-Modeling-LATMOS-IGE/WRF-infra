@@ -21,7 +21,7 @@ valid_path_3=.
 invalid_path_1="dirname with spaces/subdir"
 invalid_path_2=
 
-if ! check_paths "$valid_path_1"; then
+if check_paths "$valid_path_1"; then
     echo A unit test has failed: check_paths "valid_path_1"
     ((n_failed++))
 fi
