@@ -9,7 +9,6 @@
 # error code if all tests pass, and with a non-zero error code otherwise.
 #
 
-check_simulation_conf=no
 source ./commons.bash
 
 n_failed=0

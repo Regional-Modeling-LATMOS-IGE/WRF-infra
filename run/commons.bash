@@ -27,7 +27,7 @@ function check_paths {
     # - The path contains no spaces.
     #
     for arg in "$@"; do
-        echo "check_paths: checking path: $arg"
+        echo "commons.bash: check_paths: checking path: $arg"
         if [[ $(echo $arg | grep -cE "[[:space:]]") -ne 0 ]]; then
             return 1
         elif [[ -z $arg ]]; then
@@ -37,9 +37,16 @@ function check_paths {
     return 0
 }
 
-if [[ $check_simulation_conf -eq yes ]]; then
+if [[ $check_simulation_conf == yes ]]; then
 
-    echo "Running tests on the simulation's configuration..."
+    echo "commons.bash: Quality checking the simulation's configuration..."
+    echo "commons.bash: This will stop execution of the script in case of"
+    echo "commons.bash: problem only if the Bash \"e\" option is set. This"
+    if [[ $- == *e* ]]; then
+        echo "commons.bash: option is currently set."
+    else
+        echo "commons.bash: option is currently NOT set."
+    fi
 
     check_paths "$(pwd)"
     check_paths "$dir_wps"
@@ -47,5 +54,9 @@ if [[ $check_simulation_conf -eq yes ]]; then
     check_paths "$dir_work"
     check_paths "$dir_grib"
     check_paths "$namelist_wps"
+
+    if [[ $- == *e* ]]; then
+        echo "commons.bash: no problem detected in the simulation's config."
+    fi
 
 fi
