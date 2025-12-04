@@ -20,7 +20,7 @@ set -e
 
 # Load simulation parameters and common resources
 source ../simulation.conf
-run_commons_tests=yes
+check_simulation_conf=yes
 source ../commons.bash
 
 submit_dir=$(pwd)

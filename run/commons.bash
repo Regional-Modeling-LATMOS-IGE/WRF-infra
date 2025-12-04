@@ -37,7 +37,7 @@ function check_paths {
     return 0
 }
 
-if [[ $run_commons_tests -eq yes ]]; then
+if [[ $check_simulation_conf -eq yes ]]; then
 
     echo "Running tests on the simulation's configuration..."
 
