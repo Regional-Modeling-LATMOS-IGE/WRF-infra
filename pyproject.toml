@@ -1,7 +1,47 @@
+[project]
+
+requires-python = ">= 3.13"
+# We restrict GCC to versions lower than 15. GCC v15 enforces the new C23
+# standard, and until recently some of the WRF files did not follow this
+# standard (compilation fails in this case). If we want to be able to compile
+# reasonably old versions of WRF, we need to keep using GCC<15 for now,
+# cf. https://github.com/WRF-Chem-Polar/WRF-Chem-Polar/issues/56.
+dependencies = [
+    "gcc<15",
+    "gfortran",
+    "openmpi",
+    "netcdf-fortran",
+]
+
+[project.optional-dependencies]
+
+preprocess = [
+    "pyproj",
+    "netcdf4",
+    "xarray",
+    "shapely",
+]
+wrfpp = [
+    "pyproj",
+    "netcdf4",
+    "xarray",
+    "cartopy",
+]
+# We add Emacs and Vim to our "dev" dependencies to benefit from modern
+# features such as "auto format with ruff on save"
+dev = [
+    "ruff",
+    "emacs",
+    "vim",
+]
+data = [
+    "copernicusmarine"
+]
+
 [tool.black]
 
-line-length=79
+line-length = 79
 
 [tool.ruff]
 
-line-length=79
+line-length = 79

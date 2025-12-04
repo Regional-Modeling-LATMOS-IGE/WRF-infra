@@ -1,0 +1,11 @@
+--- Makefile	2025-11-16 15:44:31.189592573 +0100
++++ Makefile.new	2025-11-16 15:45:08.158026367 +0100
+@@ -1,7 +1,7 @@
+ .SUFFIXES: .c .o
+ 
+ CC_TOOLS = cc
+-CFLAGS = $(CC_TOOLS_CFLAGS) #-ansi
++CFLAGS = $(CC_TOOLS_CFLAGS) -Wno-implicit-function-declaration -Wno-implicit-int
+ LDFLAGS =
+ DEBUG = -g 
+ OBJ = registry.o my_strtok.o reg_parse.o data.o type.o misc.o \

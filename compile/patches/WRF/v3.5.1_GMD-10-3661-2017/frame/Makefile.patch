@@ -1,0 +1,11 @@
+--- Makefile	2025-11-16 15:46:14.703007175 +0100
++++ Makefile.new	2025-11-16 15:46:41.886590837 +0100
+@@ -166,7 +166,7 @@
+ 	$(CC) -c $(CFLAGS) wrf_num_bytes_between.c
+ 
+ pack_utils.o :
+-	$(CC) -c $(CFLAGS) -DIWORDSIZE=$(IWORDSIZE) pack_utils.c
++	$(CC) -Wno-implicit-int -c $(CFLAGS) -DIWORDSIZE=$(IWORDSIZE) pack_utils.c
+ 
+ module_internal_header_util.o :
+ 	$(CPP) $(CPPFLAGS) -I../inc module_internal_header_util.F > module_internal_header_util.f90

@@ -1,0 +1,31 @@
+--- configure_new.defaults	2025-11-16 15:29:07.837784379 +0100
++++ configure_new.defaults.new	2025-11-16 15:31:33.578542563 +0100
+@@ -811,7 +811,7 @@
+ OMPCPP          =       # -D_OPENMP
+ OMP             =       # -fopenmp
+ OMPCC           =       # -fopenmp
+-SFC             =       gfortran
++SFC             =       gfortran -fallow-argument-mismatch
+ SCC             =       gcc
+ CCOMP           =       gcc
+ DM_FC           =       mpif90 -f90=$(SFC)
+@@ -822,8 +822,8 @@
+ RWORDSIZE       =       CONFIGURE_RWORDSIZE
+ PROMOTION       =       # -fdefault-real-8  # uncomment manually
+ ARCH_LOCAL      =       -DNONSTANDARD_SYSTEM_SUBR -DWRF_USE_CLM
+-CFLAGS_LOCAL    =       -w -O3 -c 
+-LDFLAGS_LOCAL   =       
++CFLAGS_LOCAL    =       -w -O3 -c -Wno-implicit-function-declaration
++LDFLAGS_LOCAL   =       -lnetcdff
+ CPLUSPLUSLIB    =       
+ ESMF_LDFLAG     =       $(CPLUSPLUSLIB)
+ FCOPTIM         =       -O2 -ftree-vectorize -funroll-loops
+@@ -838,7 +838,7 @@
+ FCBASEOPTS      =       $(FCBASEOPTS_NO_G) $(FCDEBUG)
+ MODULE_SRCH_FLAG =     
+ TRADFLAG        =      -traditional
+-CPP             =      /lib/cpp -C -P
++CPP             =      /lib/cpp -C -P -nostdinc
+ AR              =      ar
+ ARFLAGS         =      ru
+ M4              =      m4 -G

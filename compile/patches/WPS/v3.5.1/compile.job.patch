@@ -1,0 +1,11 @@
+18c18,23
+< echo -e "2" | \
+---
+> if [[ -f ../WRFV3 || -d ../WRFV3 ]]; then
+>     echo "error: ../WRFV3 already exists, exiting..."
+>     exit 42
+> fi
+> ln -s $WRF_DIR ../WRFV3
+> echo -e "4" | \
+20a26
+> rm ../WRFV3

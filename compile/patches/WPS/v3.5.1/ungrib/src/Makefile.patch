@@ -1,0 +1,11 @@
+--- Makefile	2025-11-17 11:20:14.288976896 +0100
++++ Makefile.new	2025-11-17 11:40:42.675108797 +0100
+@@ -93,7 +93,7 @@
+ 
+ .c.o:
+ 	$(RM) $@
+-	$(CC) $(CPPFLAGS) $(CFLAGS) -c $<
++	$(CC) $(CPPFLAGS) $(CFLAGS) -Wno-implicit-int -c $<
+ 
+ 
+ clean:
