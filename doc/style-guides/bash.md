@@ -70,14 +70,20 @@ if [[ $my_var -eq 0 ]]; then
 fi
 
 # Not OK
-if (( my_var==0 )); then
+if (( my_var == 0 )); then
     echo "my_var is zero"
 fi
 ```
 
 Rationale: with this choice, the syntax is generally more consistent throughout scripts. We rarely need to perform many arithemetic operations in a Bash script. If you do, you should probably use Python instead.
 
-# -eq, ==, =
+# Comparison operators (-eq, -ne, =, ==, !=, etc)
+
+The following operators are used to compare numbers inside double square braquets `[[ ... ]]`: `-eq`, `-ne`, `-lt`, `-le`, `-gt`, `-ge`.
+
+The following operators are used to compare strings inside double square braquets `[[ ... ]]`: `==`, `!=`. The operator `=` can also be used for equality testing in this context, but we prefer to use `==` instead. Rationale:
+ - It is more intuitive, because most other languages use `==` for equality testing, while `=` is generally used for assignment.
+ - `==` is more flexible than `=`: the former can be used for pattern matching.
 
 # Function docstrings
 
