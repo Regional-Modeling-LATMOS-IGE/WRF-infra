@@ -23,12 +23,6 @@ def prepare_components(opts):
         The WRF options, formatted to be passed to the configure script.
 
     """
-    config_file = os.path.join(opts.destination, "configure")
-    cmd = ["grep", "-E", "^      [a-zA-Z0-9]+).+=.+;;$", config_file]
-    valid_comps = cms.run_stdout(cmd, cwd=opts.destination)
-    valid_comps = [comp.split(")")[0].strip() for comp in valid_comps]
-    if any(comp not in valid_comps for comp in opts.components):
-        raise RuntimeError("There are some invalid WRF extra components.")
     return " " + " ".join(opts.components) if opts.components else ""
 
 
